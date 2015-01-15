@@ -30,11 +30,14 @@ firstslice=0
 lastslice=35
 slices_per_node=4
 #dryrun="-n"
-pollingtimeout=1000
+pollingtimeout=100
 rundir=`pwd`
 
-baseport_on_flpgroup=48100
-baseport_on_epn1group=48200
+baseport_on_flpgroup=48400
+baseport_on_epn1group=48450
+flp_command_socket=48490
+flp_heartbeat_socket=48491
+number_of_epns=12
 
 # uncomment the following line to print the commands instead of
 # actually launching them
@@ -117,6 +120,13 @@ translate_io_attributes() {
     echo $__translated
 }
 
+translate_io_alternateformat() {
+    __inputattributes=$1
+    io=`echo $__inputattributes | sed -e 's| .*$||`
+    type=`echo $__inputattributes | sed -e 's| .*$||`
+    io=`echo $__inputattributes | sed -e 's| .*$||`
+}
+
 ###################################################################
 # create an flp node group
 epn1_input=
@@ -156,8 +166,36 @@ create_flpgroup() {
         sessioncmd[nsessions]=$command
         let nsessions++
 
-        epn1_input[n_epn1_inputs]=${output/\/\/\*:///$node:}
+        deviceid="FLP_$node"
+	command="testFLP_distributed"
+	command+=" --id $deviceid"
+	command+=" --num-inputs 3"
+	command+=" --num-outputs $number_of_epns"
+	command+=" --heartbeat-timeout 20000"
+	command+=" --send-offset 0" #$((10#$i))"
+	command+=" --input-socket-type sub --input-buff-size 500 --input-method bind --input-address tcp://*:$flp_command_socket   --log-input-rate 0" # command input
+	command+=" --input-socket-type sub --input-buff-size 500 --input-method bind --input-address tcp://*:$flp_heartbeat_socket --log-input-rate 0" # heartbeat input
+	command+=" "
+        input=`translate_io_attributes "$output"`
+	#command+=`translate_io_alternateformat $input` # data input
+	command+=" --input-socket-type pull --input-buff-size 5000 --input-method connect --input-address tcp://$node:$((basesocket + c)) --log-input-rate 1" # data input
+	for ((j=0; j<$number_of_epns; j++));
+	do
+            command+=" --output-socket-type push --output-buff-size 5000 --output-method connect --output-address tcp://10.162.130.79:$((j + 48480)) --log-output-rate 1"
+#            output="--output type=push,size=5000,method=connect,address=tcp://cn59-ib:48480$j"
+#            command+=" "
+#            command+=`translate_io_alternateformat $output`
+#            command+=" --log-output-rate 1"
+#            epn1_input[n_epn1_inputs]=${output/\/\/\*:///$node:}
+#            let n_epn1_inputs++
+	done
+        epn1_input[n_epn1_inputs]=${node}
         let n_epn1_inputs++
+
+	sessionnode[nsessions]=$node
+	sessiontitle[nsessions]=$deviceid
+	sessioncmd[nsessions]=$command
+	let nsessions++
     else
         # add each CF output directly to EPN input
 	# TODO: this is a bug, but it does not harm
@@ -180,16 +218,40 @@ create_epn1group() {
 
     output=`echo "${epn1_input[@]}"`
     if [ "x$bypass_tracking" != "xyes" ]; then
-        deviceid=Tracker
-        input=`translate_io_attributes "$output"`
-        output="--output type=push,size=1000,method=bind,address=tcp://*:$((basesocket + socketcount))"
-        let socketcount++
+	for ((trackerid=0; trackerid<$number_of_epns; trackerid++)); do
+            deviceid=EPN_`printf %02d $trackerid`
+	    command="testEPN_distributed"
+	    command+=" --id $deviceid"
+	    command+=" --num-outputs $((n_epn1_inputs + 1))"
+	    command+=" --heartbeat-interval 5000"
+	    command+=" --buffer-timeout 30000"
+	    command+=" --num-flps $n_epn1_inputs"
+	    command+=" --input-socket-type pull --input-buff-size 5000 --input-method bind --input-address tcp://10.162.130.79:$((trackerid + 48480)) --log-input-rate 1" # data input
+	    for flpnode in ${epn1_input[@]}; # heartbeats
+	    do
+		command+=" --output-socket-type pub --output-buff-size 500 --output-method connect --output-address tcp://$flpnode:$flp_heartbeat_socket --log-output-rate 0"
+	    done
+	    command+=" --output-socket-type push --output-buff-size 5000 --output-method bind --output-address tcp://*:$((basesocket + socketcount)) --log-output-rate 1" # data output
+        
+	sessionnode[nsessions]=$node
+        sessiontitle[nsessions]="$deviceid"
+        sessioncmd[nsessions]=$command
+        let nsessions++
+
+        deviceid=Tracker_`printf %02d $trackerid`
+	#output=`echo "${epn1_input[@]}"`
+        #input=`translate_io_attributes "$output"`
+	input="--input type=pull,size=1000,method=connect,address=tcp://localhost:$((basesocket + socketcount))"
+	let socketcount++
+        output="--output type=push,size=1000,method=connect,address=tcp://localhost:$((basesocket + number_of_epns))"
         command="aliceHLTWrapper $deviceid 1 ${dryrun} --poll-period $pollingtimeout $input $output --library libAliHLTTPC.so --component TPCCATracker --run $runno --parameter '-GlobalTracking -loglevel=0x79'"
 
         sessionnode[nsessions]=$node
         sessiontitle[nsessions]="$deviceid"
         sessioncmd[nsessions]=$command
         let nsessions++
+	done
+        socketcount=$((trackerid + 1))
 
         deviceid=GlobalMerger
         input=`translate_io_attributes "$output"`
@@ -248,9 +310,11 @@ for ((isession=$nsessions++-1; isession>=0; isession--)); do
     if [ "x$printcmdtoscreen" == "x" ]; then
         echo "starting ${sessiontitle[$isession]} on ${sessionnode[$isession]}: ${sessioncmd[$isession]}"
     fi
-    #$logcmd=" 2>&1 | tee ${sessiontitle[$isession]}.log"
+    #logcmd=" 2>&1 | tee ${sessiontitle[$isession]}.log"
     $printcmdtoscreen screen -d -m -S "${sessiontitle[$isession]} on ${sessionnode[$isession]}" ssh ${sessionnode[$isession]} "(cd $rundir && source setup.sh && ${sessioncmd[$isession]}) $logcmd" &
     applications+=" "`echo ${sessioncmd[$isession]} | sed -e 's| .*$||'`
+    # sleep between starts, some of the screens are not started if the frequency is too high
+    usleep 200000
 done
 
 if [ "x$printcmdtoscreen" == "x" ]; then

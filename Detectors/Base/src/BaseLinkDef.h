@@ -7,5 +7,6 @@
 
 #pragma link C++ class AliceO2::Base::Detector+;
 #pragma link C++ class AliceO2::Base::TrackReference+;
+#pragma link C++ struct AliceO2::Base::DataHeader+;
 
 #endif

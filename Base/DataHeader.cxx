@@ -4,6 +4,27 @@ const char* AliceO2::Base::DataHeader::sMagicString = "O2 ";
 
 using namespace AliceO2::Base;
 
+//possible data origins
+const DataOrigin gDataOriginAny    ("***");
+const DataOrigin gDataOriginInvalid("   ");
+const DataOrigin gDataOriginTPC    ("TPC");
+const DataOrigin gDataOriginTRD    ("TRD");
+const DataOrigin gDataOriginTOF    ("TOF");
+
+//possible data types
+const DataDescription gDataDescriptionAny     ("***************");
+const DataDescription gDataDescriptionInvalid ("               ");
+const DataDescription gDataDescriptionRawData ("RAWDATA        ");
+const DataDescription gDataDescriptionClusters("CLUSTERS       ");
+const DataDescription gDataDescriptionTracks  ("TRACKS         ");
+
+//possible serialization types
+const PayloadSerialization gPayloadSerializationAny    ("*******");
+const PayloadSerialization gPayloadSerializationInvalid("       ");
+const PayloadSerialization gPayloadSerializationNone   ("NONE   ");
+const PayloadSerialization gPayloadSerializationROOT   ("ROOT   ");
+const PayloadSerialization gPayloadSerializationFlatBuf("FLATBUF");
+
 //_________________________________________________________________________________________________
 AliceO2::Base::DataHeader::DataHeader()
   : magicStringInt(*reinterpret_cast<const int32_t*>(sMagicString))

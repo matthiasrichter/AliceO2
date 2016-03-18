@@ -136,6 +136,30 @@ struct PayloadSerialization
   void print() const {printf("Serialization: %s\n", payloadSerialization);}
 };
 
+//____________________________________________________________________________
+//possible data origins
+extern const DataOrigin gDataOriginAny;
+extern const DataOrigin gDataOriginInvalid;
+extern const DataOrigin gDataOriginTPC;
+extern const DataOrigin gDataOriginTRD;
+extern const DataOrigin gDataOriginTOF;
+
+//____________________________________________________________________________
+//possible data types
+extern const DataDescription gDataDescriptionAny;
+extern const DataDescription gDataDescriptionInvalid;
+extern const DataDescription gDataDescriptionRaw;
+extern const DataDescription gDataDescriptionClusters;
+extern const DataDescription gDataDescriptionTracks;
+
+//____________________________________________________________________________
+//possible serialization types
+extern const PayloadSerialization gPayloadSerializationAny;
+extern const PayloadSerialization gPayloadSerializationInvalid;
+extern const PayloadSerialization gPayloadSerializationNone;
+extern const PayloadSerialization gPayloadSerializationROOT;
+extern const PayloadSerialization gPayloadSerializationFlatBuf;
+
 } //namespace Base
 } //namespace AliceO2
 

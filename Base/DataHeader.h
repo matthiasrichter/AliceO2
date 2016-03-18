@@ -8,41 +8,54 @@
 #define ALICEO2_BASE_DATA_HEADER_
 
 #include <cstdint>
+#include <cstring>
+#include <cstdio>
 
 namespace AliceO2 {
 namespace Base {
 
-//declare the length of the string fields
-//TODO: maybe put them as static members of header
-const int gDataHeaderLengthMagicString = 4;
-const int gDataHeaderLengthDataOriginString = 4;
-const int gDataHeaderLengthDataDescriptionString = 16;
-const int gDataHeaderLengthPayloadSerializationString = 8;
+//constant field lengths for char fields
+const int gSizeMagicString = 4;
+const int gSizeDataOriginString = 4;
+const int gSizeDataDescriptionString = 16;
+const int gSizePayloadSerializationString = 8;
 
+struct DataHeader;
+struct DataOrigin;
+struct DataDescription;
+struct PayloadSerialization;
+
+//____________________________________________________________________________
 //the main header struct
 struct DataHeader
 {
+  //other constants
+  static const int sVersion = 1;
+  static const char* sMagicString;
+
+  //__the data layout:
+  
   //a magic string
   union {
-    char     magicString[gDataHeaderLengthMagicString];
+    char     magicString[gSizeMagicString];
     int32_t  magicStringInt;
   };
   
   //origin of the data (originating detector)
   union {
-    char     dataOrigin[gDataHeaderLengthDataOriginString];
+    char     dataOrigin[gSizeDataOriginString];
     int32_t  dataOriginInt;
   };
 
   //data type descriptor
   union {
-    char     dataDescription[gDataHeaderLengthDataDescriptionString];
+    char     dataDescription[gSizeDataDescriptionString];
     int64_t  dataDescriptionInt[2];
   };
 
   //serialization method
   union {
-    char     payloadSerialization[gDataHeaderLengthPayloadSerializationString];
+    char     payloadSerialization[gSizePayloadSerializationString];
     int64_t  payloadSerializationInt;
   };
   
@@ -55,12 +68,72 @@ struct DataHeader
   int32_t    headerVersion;  //version of this header
   int32_t    headerSize;     //size of this header
   int32_t    payloadSize;    //size of the associated data
-  //_______________________________________________________
-  //___NEVER MODIFY THE ABOVE______________________________
-  //___NEW STUFF GOES BELOW________________________________
 
-  //_______________________________________________________
+  //___NEVER MODIFY THE ABOVE
+  //___NEW STUFF GOES BELOW
+
   //___the functions:
+  DataHeader(); //ctor
+  DataHeader(const DataHeader&); //copy ctor
+  DataHeader& operator=(const DataHeader&); //assignment
+  bool operator==(const DataHeader&); //comparison
+  bool operator==(const DataOrigin&); //comparison
+  bool operator==(const DataDescription&); //comparison
+  bool operator==(const PayloadSerialization&); //comparison
+  void print() const;
+};
+
+//____________________________________________________________________________
+struct DataOrigin
+{
+  //origin of the data (originating detector)
+  union {
+    char     dataOrigin[gSizeDataOriginString];
+    int32_t  dataOriginInt;
+  };
+  DataOrigin(const char* origin)
+    //: dataOriginInt(*(reinterpret_cast<const int32_t*>(origin))) {}
+    : dataOrigin() {
+      memset(dataOrigin, '\0', gSizeDataOriginString);
+      strncpy(dataOrigin, origin, gSizeDataOriginString-1);
+    }
+  void print() const {printf("Data origin  : %s\n", dataOrigin);}
+};
+
+//____________________________________________________________________________
+struct DataDescription
+{
+  //data type descriptor
+  union {
+    char     dataDescription[gSizeDataDescriptionString];
+    int64_t  dataDescriptionInt[2];
+  };
+  DataDescription(const char* desc)
+    //: dataDescriptionInt { (reinterpret_cast<const int64_t*>(desc))[0],
+    //                       (reinterpret_cast<const int64_t*>(desc))[1]
+    //                     }  {}
+    : dataDescription() {
+      memset(dataDescription, '\0', gSizeDataDescriptionString);
+      strncpy(dataDescription, desc, gSizeDataDescriptionString-1);
+    }
+  void print() const {printf("Data descr.  : %s\n", dataDescription);}
+};
+
+//____________________________________________________________________________
+struct PayloadSerialization
+{
+  //serialization method
+  union {
+    char     payloadSerialization[gSizePayloadSerializationString];
+    int64_t  payloadSerializationInt;
+  };
+  PayloadSerialization(const char* serialization)
+    //: payloadSerializationInt(*(reinterpret_cast<const int64_t*>(serialization))) {}
+    : payloadSerialization() {
+      memset(payloadSerialization, '\0', gSizePayloadSerializationString);
+      strncpy(payloadSerialization, serialization, gSizePayloadSerializationString-1);
+    }
+  void print() const {printf("Serialization: %s\n", payloadSerialization);}
 };
 
 } //namespace Base

@@ -76,6 +76,9 @@ struct DataHeader
   DataHeader(); //ctor
   DataHeader(const DataHeader&); //copy ctor
   DataHeader& operator=(const DataHeader&); //assignment
+  DataHeader& operator=(const DataOrigin&); //assignment
+  DataHeader& operator=(const DataDescription&); //assignment
+  DataHeader& operator=(const PayloadSerialization&); //assignment
   bool operator==(const DataHeader&); //comparison
   bool operator==(const DataOrigin&); //comparison
   bool operator==(const DataDescription&); //comparison

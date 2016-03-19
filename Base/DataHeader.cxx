@@ -82,6 +82,28 @@ DataHeader& AliceO2::Base::DataHeader::operator=(const DataHeader& that)
 }
 
 //_________________________________________________________________________________________________
+DataHeader& AliceO2::Base::DataHeader::operator=(const DataOrigin& that)
+{
+  dataOriginInt = that.dataOriginInt;
+  return *this;
+}
+
+//_________________________________________________________________________________________________
+DataHeader& AliceO2::Base::DataHeader::operator=(const DataDescription& that)
+{
+  dataDescriptionInt[0] = that.dataDescriptionInt[0];
+  dataDescriptionInt[1] = that.dataDescriptionInt[1];
+  return *this;
+}
+
+//_________________________________________________________________________________________________
+DataHeader& AliceO2::Base::DataHeader::operator=(const PayloadSerialization& that)
+{
+  payloadSerializationInt = that.payloadSerializationInt;
+  return *this;
+}
+
+//_________________________________________________________________________________________________
 bool AliceO2::Base::DataHeader::operator==(const DataOrigin& that)
 {
   return (that.dataOriginInt == gDataOriginAny.dataOriginInt ||

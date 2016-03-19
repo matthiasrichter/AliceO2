@@ -94,8 +94,11 @@ struct DataOrigin
   DataOrigin(const char* origin)
     //: dataOriginInt(*(reinterpret_cast<const int32_t*>(origin))) {}
     : dataOrigin() {
-      memset(dataOrigin, '\0', gSizeDataOriginString);
-      strncpy(dataOrigin, origin, gSizeDataOriginString-1);
+      memset(dataOrigin, ' ', gSizeDataOriginString-1);
+      if (origin) {
+        strncpy(dataOrigin, origin, gSizeDataOriginString-1);
+      }
+      dataOrigin[gSizeDataOriginString-1] = '\0';
     }
   void print() const {printf("Data origin  : %s\n", dataOrigin);}
 };
@@ -113,8 +116,11 @@ struct DataDescription
     //                       (reinterpret_cast<const int64_t*>(desc))[1]
     //                     }  {}
     : dataDescription() {
-      memset(dataDescription, '\0', gSizeDataDescriptionString);
-      strncpy(dataDescription, desc, gSizeDataDescriptionString-1);
+      memset(dataDescription, ' ', gSizeDataDescriptionString-1);
+      if (desc) {
+        strncpy(dataDescription, desc, gSizeDataDescriptionString-1);
+      }
+      dataDescription[gSizeDataDescriptionString-1] = '\0';
     }
   void print() const {printf("Data descr.  : %s\n", dataDescription);}
 };
@@ -130,8 +136,11 @@ struct PayloadSerialization
   PayloadSerialization(const char* serialization)
     //: payloadSerializationInt(*(reinterpret_cast<const int64_t*>(serialization))) {}
     : payloadSerialization() {
-      memset(payloadSerialization, '\0', gSizePayloadSerializationString);
-      strncpy(payloadSerialization, serialization, gSizePayloadSerializationString-1);
+      memset(payloadSerialization, ' ', gSizePayloadSerializationString-1);
+      if (serialization) {
+        strncpy(payloadSerialization, serialization, gSizePayloadSerializationString-1);
+      }
+      payloadSerialization[gSizePayloadSerializationString-1] = '\0';
     }
   void print() const {printf("Serialization: %s\n", payloadSerialization);}
 };

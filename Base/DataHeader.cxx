@@ -27,7 +27,7 @@ const PayloadSerialization gPayloadSerializationFlatBuf("FLATBUF");
 
 //_________________________________________________________________________________________________
 AliceO2::Base::DataHeader::DataHeader()
-  : magicStringInt(*reinterpret_cast<const int32_t*>(sMagicString))
+  : magicStringInt(*reinterpret_cast<const uint32_t*>(sMagicString))
   , dataOriginInt()
   , dataDescriptionInt()
   , payloadSerializationInt()

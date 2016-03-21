@@ -15,10 +15,10 @@ namespace AliceO2 {
 namespace Base {
 
 //constant field lengths for char fields
-const int gSizeMagicString = 4;
-const int gSizeDataOriginString = 4;
-const int gSizeDataDescriptionString = 16;
-const int gSizePayloadSerializationString = 8;
+const uint32_t gSizeMagicString = 4;
+const uint32_t gSizeDataOriginString = 4;
+const uint32_t gSizeDataDescriptionString = 16;
+const uint32_t gSizePayloadSerializationString = 8;
 
 struct DataHeader;
 struct DataOrigin;
@@ -30,7 +30,7 @@ struct PayloadSerialization;
 struct DataHeader
 {
   //other constants
-  static const int sVersion = 1;
+  static const uint32_t sVersion = 1;
   static const char* sMagicString;
 
   //__the data layout:
@@ -38,36 +38,36 @@ struct DataHeader
   //a magic string
   union {
     char     magicString[gSizeMagicString];
-    int32_t  magicStringInt;
+    uint32_t  magicStringInt;
   };
   
   //origin of the data (originating detector)
   union {
     char     dataOrigin[gSizeDataOriginString];
-    int32_t  dataOriginInt;
+    uint32_t  dataOriginInt;
   };
 
   //data type descriptor
   union {
     char     dataDescription[gSizeDataDescriptionString];
-    int64_t  dataDescriptionInt[2];
+    uint64_t  dataDescriptionInt[2];
   };
 
   //serialization method
   union {
     char     payloadSerialization[gSizePayloadSerializationString];
-    int64_t  payloadSerializationInt;
+    uint64_t  payloadSerializationInt;
   };
   
   //sub specification (e.g. link number)
-  int64_t    subSpecification;
+  uint64_t    subSpecification;
 
   //flags, first bit indicates that a sub header follows
-  int32_t    flags;
+  uint32_t    flags;
 
-  int32_t    headerVersion;  //version of this header
-  int32_t    headerSize;     //size of this header
-  int32_t    payloadSize;    //size of the associated data
+  uint32_t    headerVersion;  //version of this header
+  uint32_t    headerSize;     //size of this header
+  uint32_t    payloadSize;    //size of the associated data
 
   //___NEVER MODIFY THE ABOVE
   //___NEW STUFF GOES BELOW
@@ -92,10 +92,10 @@ struct DataOrigin
   //origin of the data (originating detector)
   union {
     char     dataOrigin[gSizeDataOriginString];
-    int32_t  dataOriginInt;
+    uint32_t  dataOriginInt;
   };
   DataOrigin(const char* origin)
-    //: dataOriginInt(*(reinterpret_cast<const int32_t*>(origin))) {}
+    //: dataOriginInt(*(reinterpret_cast<const uint32_t*>(origin))) {}
     : dataOrigin() {
       memset(dataOrigin, ' ', gSizeDataOriginString-1);
       if (origin) {
@@ -112,11 +112,11 @@ struct DataDescription
   //data type descriptor
   union {
     char     dataDescription[gSizeDataDescriptionString];
-    int64_t  dataDescriptionInt[2];
+    uint64_t  dataDescriptionInt[2];
   };
   DataDescription(const char* desc)
-    //: dataDescriptionInt { (reinterpret_cast<const int64_t*>(desc))[0],
-    //                       (reinterpret_cast<const int64_t*>(desc))[1]
+    //: dataDescriptionInt { (reinterpret_cast<const uint64_t*>(desc))[0],
+    //                       (reinterpret_cast<const uint64_t*>(desc))[1]
     //                     }  {}
     : dataDescription() {
       memset(dataDescription, ' ', gSizeDataDescriptionString-1);
@@ -134,10 +134,10 @@ struct PayloadSerialization
   //serialization method
   union {
     char     payloadSerialization[gSizePayloadSerializationString];
-    int64_t  payloadSerializationInt;
+    uint64_t  payloadSerializationInt;
   };
   PayloadSerialization(const char* serialization)
-    //: payloadSerializationInt(*(reinterpret_cast<const int64_t*>(serialization))) {}
+    //: payloadSerializationInt(*(reinterpret_cast<const uint64_t*>(serialization))) {}
     : payloadSerialization() {
       memset(payloadSerialization, ' ', gSizePayloadSerializationString-1);
       if (serialization) {

@@ -17,8 +17,8 @@ namespace Base {
 //constant field lengths for char fields
 const uint32_t gSizeMagicString = 4;
 const uint32_t gSizeDataOriginString = 4;
-const uint32_t gSizeDataDescriptionString = 16;
 const uint32_t gSizePayloadSerializationString = 8;
+const uint32_t gSizeDataDescriptionString = 16;
 
 struct DataHeader;
 struct DataOrigin;
@@ -47,18 +47,18 @@ struct DataHeader
     uint32_t  dataOriginInt;
   };
 
-  //data type descriptor
-  union {
-    char     dataDescription[gSizeDataDescriptionString];
-    uint64_t  dataDescriptionInt[2];
-  };
-
   //serialization method
   union {
     char     payloadSerialization[gSizePayloadSerializationString];
     uint64_t  payloadSerializationInt;
   };
   
+  //data type descriptor
+  union {
+    char     dataDescription[gSizeDataDescriptionString];
+    uint64_t  dataDescriptionInt[2];
+  };
+
   //sub specification (e.g. link number)
   uint64_t    subSpecification;
 

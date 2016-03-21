@@ -29,8 +29,9 @@ const PayloadSerialization gPayloadSerializationFlatBuf("FLATBUF");
 AliceO2::Base::DataHeader::DataHeader()
   : magicStringInt(*reinterpret_cast<const uint32_t*>(sMagicString))
   , dataOriginInt(gDataOriginInvalid.dataOriginInt)
-  , dataDescriptionInt(gDataDescriptionInvalid.dataDescriptionInt)
   , payloadSerializationInt(gPayloadSerializationInvalid.payloadSerializationInt)
+  , dataDescriptionInt{gDataDescriptionInvalid.dataDescriptionInt[0],
+                       gDataDescriptionInvalid.dataDescriptionInt[1]}
   , subSpecification(0)
   , flags(0)
   , headerVersion(sVersion)
@@ -43,8 +44,8 @@ AliceO2::Base::DataHeader::DataHeader()
 AliceO2::Base::DataHeader::DataHeader(const DataHeader& that)
   : magicStringInt(that.magicStringInt)
   , dataOriginInt(that.dataOriginInt)
-  , dataDescriptionInt{that.dataDescriptionInt[0], that.dataDescriptionInt[1]}
   , payloadSerializationInt(that.payloadSerializationInt)
+  , dataDescriptionInt{that.dataDescriptionInt[0], that.dataDescriptionInt[1]}
   , subSpecification(that.subSpecification)
   , flags(that.flags)
   , headerVersion(that.headerVersion)
@@ -58,8 +59,8 @@ void AliceO2::Base::DataHeader::print() const
 {
   printf("Data header version %i, flags: %i\n",headerVersion, flags);
   printf("  origin       : %s\n", dataOrigin);
-  printf("  description  : %s\n", dataDescription);
   printf("  serialization: %s\n", payloadSerialization);
+  printf("  description  : %s\n", dataDescription);
   printf("  sub spec.    : %lli\n", subSpecification);
   printf("  header size  : %i\n", headerSize);
   printf("  payloadSize  : %i\n", payloadSize);

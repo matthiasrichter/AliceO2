@@ -1,4 +1,6 @@
 #include "DataHeader.h"
+#include <cstdio> // printf
+#include <cstring> // strncpy
 
 const char* AliceO2::Base::DataHeader::sMagicString = "O2 ";
 
@@ -61,7 +63,7 @@ void AliceO2::Base::DataHeader::print() const
   printf("  origin       : %s\n", dataOrigin);
   printf("  serialization: %s\n", payloadSerialization);
   printf("  description  : %s\n", dataDescription);
-  printf("  sub spec.    : %lli\n", subSpecification);
+  printf("  sub spec.    : %lu\n", subSpecification);
   printf("  header size  : %i\n", headerSize);
   printf("  payloadSize  : %i\n", payloadSize);
 }
@@ -132,4 +134,109 @@ bool AliceO2::Base::DataHeader::operator==(const DataHeader& that)
           dataOriginInt == that.dataOriginInt &&
           dataDescriptionInt == that.dataDescriptionInt &&
           subSpecification == that.subSpecification );
+}
+
+//_________________________________________________________________________________________________
+AliceO2::Base::DataOrigin::DataOrigin() : dataOriginInt(gInvalidToken32) {}
+
+//_________________________________________________________________________________________________
+AliceO2::Base::DataOrigin::DataOrigin(const char* origin)
+  : dataOriginInt(gInvalidToken32)
+{
+  if (origin) {
+    strncpy(dataOrigin, origin, gSizeDataOriginString-1);
+  }
+}
+
+//_________________________________________________________________________________________________
+bool AliceO2::Base::DataOrigin::operator==(const AliceO2::Base::DataOrigin& other) const
+{
+  return dataOriginInt == other.dataOriginInt;
+}
+
+//_________________________________________________________________________________________________
+void AliceO2::Base::DataOrigin::print() const
+{
+  printf("Data origin  : %s\n", dataOrigin);
+}
+
+//_________________________________________________________________________________________________
+AliceO2::Base::DataDescription::DataDescription()
+  : dataDescriptionInt()
+{
+  dataDescriptionInt[0] = gInvalidToken64;
+  dataDescriptionInt[1] = gInvalidToken64<<8 | gInvalidToken64;
+}
+
+//_________________________________________________________________________________________________
+AliceO2::Base::DataDescription::DataDescription(const char* desc)
+  : dataDescription()
+{
+  *this = DataDescription(); // initialize by standard constructor
+  if (desc) {
+    strncpy(dataDescription, desc, gSizeDataDescriptionString-1);
+  }
+}
+
+//_________________________________________________________________________________________________
+bool AliceO2::Base::DataDescription::operator==(const AliceO2::Base::DataDescription& other) const {
+  return (dataDescriptionInt[0] == other.dataDescriptionInt[0] &&
+          dataDescriptionInt[1] == other.dataDescriptionInt[1]);
+}
+
+//_________________________________________________________________________________________________
+void AliceO2::Base::DataDescription::print() const
+{
+  printf("Data descr.  : %s\n", dataDescription);
+}
+
+//_________________________________________________________________________________________________
+AliceO2::Base::DataIdentifier::DataIdentifier()
+  : dataDescription(), dataOrigin()
+{
+}
+
+//_________________________________________________________________________________________________
+AliceO2::Base::DataIdentifier::DataIdentifier(const char* desc, const char* origin)
+  : dataDescription(), dataOrigin()
+{
+  dataDescription = AliceO2::Base::DataDescription(desc);
+  dataOrigin = AliceO2::Base::DataOrigin(origin);
+}
+
+//_________________________________________________________________________________________________
+bool AliceO2::Base::DataIdentifier::operator==(const AliceO2::Base::DataIdentifier& other) const {
+  if (other.dataOrigin != gDataOriginAny && dataOrigin != other.dataOrigin) return false;
+  if (other.dataDescription != gDataDescriptionAny && dataDescription != other.dataDescription) return false;
+  return true;
+}
+
+//_________________________________________________________________________________________________
+void AliceO2::Base::DataIdentifier::print() const
+{
+  dataOrigin.print();
+  dataDescription.print();
+}
+
+//_________________________________________________________________________________________________
+AliceO2::Base::PayloadSerialization::PayloadSerialization() : payloadSerializationInt(gInvalidToken64) {}
+
+//_________________________________________________________________________________________________
+AliceO2::Base::PayloadSerialization::PayloadSerialization(const char* serialization)
+  : payloadSerializationInt(gInvalidToken32)
+{
+  if (serialization) {
+    strncpy(payloadSerialization, serialization, gSizePayloadSerializationString-1);
+  }
+}
+
+//_________________________________________________________________________________________________
+bool AliceO2::Base::PayloadSerialization::operator==(const AliceO2::Base::PayloadSerialization& other) const {
+  return payloadSerializationInt == other.payloadSerializationInt;
+}
+
+//_________________________________________________________________________________________________
+void AliceO2::Base::PayloadSerialization::print() const
+{
+  printf("Serialization: %s\n", payloadSerialization);
 }

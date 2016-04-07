@@ -8,8 +8,6 @@
 #define ALICEO2_BASE_DATA_HEADER_
 
 #include <cstdint>
-#include <cstring>
-#include <cstdio>
 
 namespace AliceO2 {
 namespace Base {
@@ -23,6 +21,7 @@ const uint32_t gSizeDataDescriptionString = 16;
 struct DataHeader;
 struct DataOrigin;
 struct DataDescription;
+struct DataIdentifier;
 struct PayloadSerialization;
 
 //____________________________________________________________________________
@@ -94,16 +93,18 @@ struct DataOrigin
     char     dataOrigin[gSizeDataOriginString];
     uint32_t  dataOriginInt;
   };
-  DataOrigin(const char* origin)
-    //: dataOriginInt(*(reinterpret_cast<const uint32_t*>(origin))) {}
-    : dataOrigin() {
-      memset(dataOrigin, ' ', gSizeDataOriginString-1);
-      if (origin) {
-        strncpy(dataOrigin, origin, gSizeDataOriginString-1);
-      }
-      dataOrigin[gSizeDataOriginString-1] = '\0';
-    }
-  void print() const {printf("Data origin  : %s\n", dataOrigin);}
+  DataOrigin();
+  DataOrigin(const DataOrigin& other) : dataOriginInt(other.dataOriginInt) {}
+  DataOrigin& operator=(const DataOrigin& other) {
+    if (&other != this) dataOriginInt = other.dataOriginInt;
+    return *this;
+  }
+  // note: no operator=(const char*) as this potentially runs into trouble with this
+  // general pointer type, use: someorigin = DataOrigin("BLA")
+  DataOrigin(const char* origin);
+  bool operator==(const DataOrigin&) const;
+  bool operator!=(const DataOrigin& other) const {return not this->operator==(other);}
+  void print() const;
 };
 
 //____________________________________________________________________________
@@ -114,18 +115,34 @@ struct DataDescription
     char     dataDescription[gSizeDataDescriptionString];
     uint64_t  dataDescriptionInt[2];
   };
-  DataDescription(const char* desc)
-    //: dataDescriptionInt { (reinterpret_cast<const uint64_t*>(desc))[0],
-    //                       (reinterpret_cast<const uint64_t*>(desc))[1]
-    //                     }  {}
-    : dataDescription() {
-      memset(dataDescription, ' ', gSizeDataDescriptionString-1);
-      if (desc) {
-        strncpy(dataDescription, desc, gSizeDataDescriptionString-1);
-      }
-      dataDescription[gSizeDataDescriptionString-1] = '\0';
+  DataDescription();
+  DataDescription(const DataDescription& other) : dataDescriptionInt() {*this = other;}
+  DataDescription& operator=(const DataDescription& other) {
+    if (&other != this) {
+      dataDescriptionInt[0] = other.dataDescriptionInt[0];
+      dataDescriptionInt[1] = other.dataDescriptionInt[1];
     }
-  void print() const {printf("Data descr.  : %s\n", dataDescription);}
+    return *this;
+  }
+  // note: no operator=(const char*) as this potentially runs into trouble with this
+  // general pointer type, use: somedesc = DataOrigin("SOMEDESCRIPTION")
+  DataDescription(const char* desc);
+  bool operator==(const DataDescription&) const;
+  bool operator!=(const DataDescription& other) const {return not this->operator==(other);}
+  void print() const;
+};
+
+//____________________________________________________________________________
+struct DataIdentifier
+{
+  //a full data identifier combining origin and description
+  DataDescription dataDescription;
+  DataOrigin dataOrigin;
+  DataIdentifier();
+  DataIdentifier(const DataIdentifier&);
+  DataIdentifier(const char* desc, const char* origin);
+  bool operator==(const DataIdentifier&) const;
+  void print() const;
 };
 
 //____________________________________________________________________________
@@ -136,17 +153,19 @@ struct PayloadSerialization
     char     payloadSerialization[gSizePayloadSerializationString];
     uint64_t  payloadSerializationInt;
   };
-  PayloadSerialization(const char* serialization)
-    //: payloadSerializationInt(*(reinterpret_cast<const uint64_t*>(serialization))) {}
-    : payloadSerialization() {
-      memset(payloadSerialization, ' ', gSizePayloadSerializationString-1);
-      if (serialization) {
-        strncpy(payloadSerialization, serialization, gSizePayloadSerializationString-1);
-      }
-      payloadSerialization[gSizePayloadSerializationString-1] = '\0';
-    }
-  void print() const {printf("Serialization: %s\n", payloadSerialization);}
+  PayloadSerialization();
+  // note: no operator=(const char*) as this potentially runs into trouble with this
+  // general pointer type, use: sertype = DataOrigin("SERTYPE")
+  PayloadSerialization(const char* serialization);
+  bool operator==(const PayloadSerialization&) const;
+  void print() const;
 };
+
+//____________________________________________________________________________
+//default int representation of 'invalid' token for char fields
+//TODO: endiness adaption at compile time
+const uint32_t gInvalidToken32 = 0x00202020;
+const uint64_t gInvalidToken64 = 0x0020202020202020;
 
 //____________________________________________________________________________
 //possible data origins

@@ -23,14 +23,14 @@ public:
 
 TestClass2* CreateTestClass2() {return new TestClass2;}
 
-//AliceO2::Factory<TestBase, const char*>::mInstance = nullptr;
+typedef AliceO2::Factory<TestBase, const char*> TestFactory;
+
+TestFactory::Registrar gCreateTestClass1("TestClass1", CreateTestClass1);
+TestFactory::Registrar gCreateTestClass2("TestClass2", CreateTestClass2);
 
 int main()
 {
-  AliceO2::Factory<TestBase, const char*> factory;
-
-  factory.Register("TestClass1", CreateTestClass1);
-  factory.Register("TestClass2", CreateTestClass2);
+  TestFactory factory;
 
   TestBase* obj = factory.Create("TestClass1");
   if (obj) obj->print();

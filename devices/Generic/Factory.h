@@ -58,6 +58,24 @@ public:
     return Instance().Create(key);
   }
 
+  /// Helper class to register a creator in the factory by using a small global object
+  class Registrar {
+  public:
+    Registrar(Key key, CreatorT func) {
+      Factory<T, Key> factory;
+      factory.Register(key, func);
+    }
+    ~Registrar() {}
+
+  private:
+    /// std constructor forbidden
+    Registrar();
+    /// copy constructor forbidden
+    Registrar(const Registrar&);
+    /// assignment operator forbidden
+    Registrar& operator=(const Registrar&);
+  };
+
 protected:
   /// worker class for factory instance, internal use only
   class FactoryInstance {
@@ -69,9 +87,9 @@ protected:
     int Register(Key key, CreatorT func) {
       auto element = mCreators.find(key);
       if (element != mCreators.end()) {
-        // this creator has been registered already
-        if (element->second == fun) return 0;
-        // different creator with same key
+        // at this point we can not tell whether its the same function
+        // or not because operator== is not implemented for std::function
+        //
         // TODO: define error policy by user
         return -1;
       }

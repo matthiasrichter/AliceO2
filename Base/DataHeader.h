@@ -44,9 +44,11 @@ const uint32_t gSizeMagicString = 4;
 /// size of the data origin field @ingroup dataheader_defines
 const uint32_t gSizeDataOriginString = 4;
 /// size of the payload serialization field @ingroup dataheader_defines
-const uint32_t gSizePayloadSerializationString = 8;
+const uint32_t gSizeSerializationString = 8;
 /// size of the data description field @ingroup dataheader_defines
 const uint32_t gSizeDataDescriptionString = 16;
+/// size of the header description field @ingroup dataheader_defines
+const uint32_t gSizeHeaderDescriptionString = 8;
 /// @}
 
 //____________________________________________________________________________
@@ -57,11 +59,11 @@ struct DataIdentifier;
 struct PayloadSerialization;
 
 //____________________________________________________________________________
-/// @struct DataHeader
-/// @brief the main header struct
+/// @struct BaseHeader
+/// @brief the base header struct
 ///
 /// @ingroup aliceo2_dataformats_dataheader
-struct DataHeader
+struct BaseHeader
 {
   //other constants
   static const uint32_t sVersion = 1;
@@ -74,16 +76,52 @@ struct DataHeader
     char     magicString[gSizeMagicString];
     uint32_t  magicStringInt;
   };
-  
+
+  /// size of this header (base + derived header)
+  uint32_t    headerSize;
+
+  /// flags, first bit indicates that a sub header follows
+  uint32_t    flags;
+
+  /// version of this header
+  uint32_t    headerVersion;
+
+  /// header contents description
+  union {
+    char headerDescription[gSizeHeaderDescriptionString];
+    uint64_t headerDescriptionInt;
+  };
+
+  /// header serialization method
+  union {
+    char     headerSerialization[gSizeSerializationString];
+    uint64_t  headerSerializationInt;
+  };
+
+  //___the functions:
+  BaseHeader(); //ctor
+  BaseHeader(const BaseHeader&); //copy ctor
+};
+
+//____________________________________________________________________________
+/// @struct DataHeader
+/// @brief the main header struct
+///
+/// @ingroup aliceo2_dataformats_dataheader
+struct DataHeader : BaseHeader
+{
   /// origin of the data (originating detector)
   union {
     char     dataOrigin[gSizeDataOriginString];
     uint32_t  dataOriginInt;
   };
 
+  // need something for alignment, is there another field needed?
+  uint32_t reserved;
+
   /// serialization method
   union {
-    char     payloadSerialization[gSizePayloadSerializationString];
+    char     payloadSerialization[gSizeSerializationString];
     uint64_t  payloadSerializationInt;
   };
   
@@ -96,15 +134,8 @@ struct DataHeader
   /// sub specification (e.g. link number)
   uint64_t    subSpecification;
 
-  /// flags, first bit indicates that a sub header follows
-  uint32_t    flags;
-
-  /// version of this header
-  uint32_t    headerVersion;
-  /// size of this header
-  uint32_t    headerSize;
   /// size of the associated data
-  uint32_t    payloadSize;
+  uint64_t    payloadSize;
 
   //___NEVER MODIFY THE ABOVE
   //___NEW STUFF GOES BELOW
@@ -216,7 +247,7 @@ struct PayloadSerialization
 {
   //serialization method
   union {
-    char     payloadSerialization[gSizePayloadSerializationString];
+    char     payloadSerialization[gSizeSerializationString];
     uint64_t  payloadSerializationInt;
   };
   PayloadSerialization();
@@ -237,6 +268,8 @@ struct PayloadSerialization
 const uint32_t gInvalidToken32 = 0x00202020;
 /// default int representation of 'invalid' token for 8-byte char field
 const uint64_t gInvalidToken64 = 0x0020202020202020;
+/// invalid version
+ const uint32_t gInvalidVersion = 0;
 
 //____________________________________________________________________________
 //possible data origins

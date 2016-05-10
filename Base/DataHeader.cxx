@@ -2,7 +2,7 @@
 #include <cstdio> // printf
 #include <cstring> // strncpy
 
-const char* AliceO2::Base::DataHeader::sMagicString = "O2 ";
+const char* AliceO2::Base::BaseHeader::sMagicString = "O2 ";
 
 using namespace AliceO2::Base;
 
@@ -21,37 +21,55 @@ const DataDescription gDataDescriptionClusters("CLUSTERS       ");
 const DataDescription gDataDescriptionTracks  ("TRACKS         ");
 
 //possible serialization types
-const PayloadSerialization gPayloadSerializationAny    ("*******");
-const PayloadSerialization gPayloadSerializationInvalid("       ");
-const PayloadSerialization gPayloadSerializationNone   ("NONE   ");
-const PayloadSerialization gPayloadSerializationROOT   ("ROOT   ");
-const PayloadSerialization gPayloadSerializationFlatBuf("FLATBUF");
+const PayloadSerialization gSerializationAny    ("*******");
+const PayloadSerialization gSerializationInvalid("       ");
+const PayloadSerialization gSerializationNone   ("NONE   ");
+const PayloadSerialization gSerializationROOT   ("ROOT   ");
+const PayloadSerialization gSerializationFlatBuf("FLATBUF");
+
+////_________________________________________________________________________________________________
+AliceO2::Base::BaseHeader::BaseHeader()
+  : magicStringInt(*reinterpret_cast<const uint32_t*>(sMagicString))
+  , headerSize(sizeof(BaseHeader))
+  , flags(0)
+  , headerVersion(gInvalidVersion)
+  , headerDescriptionInt(gInvalidToken64)
+  , headerSerializationInt(gInvalidToken64)
+{
+}
 
 //_________________________________________________________________________________________________
+AliceO2::Base::BaseHeader::BaseHeader(const BaseHeader& that)
+  : magicStringInt(that.magicStringInt)
+  , headerSize(that.headerSize)
+  , flags(that.flags)
+  , headerVersion(that.headerVersion)
+  , headerDescriptionInt(that.headerDescriptionInt)
+  , headerSerializationInt(that.headerSerializationInt)
+{
+}
+
+////_________________________________________________________________________________________________
 AliceO2::Base::DataHeader::DataHeader()
-  : magicStringInt(*reinterpret_cast<const uint32_t*>(sMagicString))
+  : BaseHeader()
   , dataOriginInt(gDataOriginInvalid.dataOriginInt)
+  , reserved(0)
   , payloadSerializationInt(gPayloadSerializationInvalid.payloadSerializationInt)
   , dataDescriptionInt{gDataDescriptionInvalid.dataDescriptionInt[0],
                        gDataDescriptionInvalid.dataDescriptionInt[1]}
   , subSpecification(0)
-  , flags(0)
-  , headerVersion(sVersion)
-  , headerSize(sizeof(DataHeader))
   , payloadSize(0)
 {
 }
 
 //_________________________________________________________________________________________________
 AliceO2::Base::DataHeader::DataHeader(const DataHeader& that)
-  : magicStringInt(that.magicStringInt)
+  : BaseHeader(that)
   , dataOriginInt(that.dataOriginInt)
+  , reserved(that.reserved)
   , payloadSerializationInt(that.payloadSerializationInt)
   , dataDescriptionInt{that.dataDescriptionInt[0], that.dataDescriptionInt[1]}
   , subSpecification(that.subSpecification)
-  , flags(that.flags)
-  , headerVersion(that.headerVersion)
-  , headerSize(that.headerSize)
   , payloadSize(that.payloadSize)
 {
 }
@@ -65,7 +83,7 @@ void AliceO2::Base::DataHeader::print() const
   printf("  description  : %s\n", dataDescription);
   printf("  sub spec.    : %lu\n", subSpecification);
   printf("  header size  : %i\n", headerSize);
-  printf("  payloadSize  : %i\n", payloadSize);
+  printf("  payloadSize  : %li\n", payloadSize);
 }
 
 //_________________________________________________________________________________________________
@@ -226,7 +244,7 @@ AliceO2::Base::PayloadSerialization::PayloadSerialization(const char* serializat
   : payloadSerializationInt(gInvalidToken32)
 {
   if (serialization) {
-    strncpy(payloadSerialization, serialization, gSizePayloadSerializationString-1);
+    strncpy(payloadSerialization, serialization, gSizeSerializationString-1);
   }
 }
 

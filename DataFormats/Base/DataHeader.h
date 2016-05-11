@@ -58,6 +58,22 @@ struct DataDescription;
 struct DataIdentifier;
 struct PayloadSerialization;
 
+#define O2HEADERMEMBER(size, length, name)   \
+  union {                                    \
+    char     name[size];                     \
+    uint ## length ## _t  name ## Int;       \
+  };
+
+#define O2HEADERMEMBER128(name)              \
+  union {                                    \
+    char     name[16];                       \
+    uint64_t name ## Int[2];                 \
+  };
+
+#define O2HEADERMEMBER16(name) O2HEADERMEMBER(2, 16, name)
+#define O2HEADERMEMBER32(name) O2HEADERMEMBER(4, 32, name)
+#define O2HEADERMEMBER64(name) O2HEADERMEMBER(8, 64, name)
+
 //____________________________________________________________________________
 /// @struct BaseHeader
 /// @brief the base header struct
@@ -72,10 +88,7 @@ struct BaseHeader
   //__the data layout:
 
   /// a magic string
-  union {
-    char     magicString[gSizeMagicString];
-    uint32_t  magicStringInt;
-  };
+  O2HEADERMEMBER32(magicString)
 
   /// size of this header (base + derived header)
   uint32_t    headerSize;
@@ -93,16 +106,10 @@ struct BaseHeader
   uint32_t    headerVersion;
 
   /// header contents description
-  union {
-    char headerDescription[gSizeHeaderDescriptionString];
-    uint64_t headerDescriptionInt;
-  };
+  O2HEADERMEMBER64(headerDescription)
 
   /// header serialization method
-  union {
-    char     headerSerialization[gSizeSerializationString];
-    uint64_t  headerSerializationInt;
-  };
+  O2HEADERMEMBER64(headerSerialization)
 
   //___the functions:
   BaseHeader(); //ctor
@@ -117,25 +124,16 @@ struct BaseHeader
 struct DataHeader : BaseHeader
 {
   /// origin of the data (originating detector)
-  union {
-    char     dataOrigin[gSizeDataOriginString];
-    uint32_t  dataOriginInt;
-  };
+  O2HEADERMEMBER32(dataOrigin)
 
   // need something for alignment, is there another field needed?
   uint32_t reserved;
 
   /// serialization method
-  union {
-    char     payloadSerialization[gSizeSerializationString];
-    uint64_t  payloadSerializationInt;
-  };
-
+  O2HEADERMEMBER64(payloadSerialization)
+  
   /// data type descriptor
-  union {
-    char     dataDescription[gSizeDataDescriptionString];
-    uint64_t  dataDescriptionInt[2];
-  };
+  O2HEADERMEMBER128(dataDescription)
 
   /// sub specification (e.g. link number)
   uint64_t    subSpecification;
@@ -171,10 +169,7 @@ struct DataHeader : BaseHeader
 struct DataOrigin
 {
   //origin of the data (originating detector)
-  union {
-    char     dataOrigin[gSizeDataOriginString];
-    uint32_t  dataOriginInt;
-  };
+  O2HEADERMEMBER32(dataOrigin)
   DataOrigin();
   DataOrigin(const DataOrigin& other) : dataOriginInt(other.dataOriginInt) {}
   DataOrigin& operator=(const DataOrigin& other) {
@@ -200,10 +195,7 @@ struct DataOrigin
 struct DataDescription
 {
   //data type descriptor
-  union {
-    char     dataDescription[gSizeDataDescriptionString];
-    uint64_t  dataDescriptionInt[2];
-  };
+  O2HEADERMEMBER128(dataDescription)
   DataDescription();
   DataDescription(const DataDescription& other) : dataDescriptionInt() {*this = other;}
   DataDescription& operator=(const DataDescription& other) {
@@ -252,10 +244,7 @@ struct DataIdentifier
 struct PayloadSerialization
 {
   //serialization method
-  union {
-    char     payloadSerialization[gSizeSerializationString];
-    uint64_t  payloadSerializationInt;
-  };
+  O2HEADERMEMBER64(payloadSerialization)
   PayloadSerialization();
   // note: no operator=(const char*) as this potentially runs into trouble with this
   // general pointer type, use: sertype = DataOrigin("SERTYPE")
@@ -275,7 +264,7 @@ const uint32_t gInvalidToken32 = 0x00202020;
 /// default int representation of 'invalid' token for 8-byte char field
 const uint64_t gInvalidToken64 = 0x0020202020202020;
 /// invalid version
- const uint32_t gInvalidVersion = 0;
+const uint32_t gInvalidVersion = 0;
 
 //____________________________________________________________________________
 //possible data origins

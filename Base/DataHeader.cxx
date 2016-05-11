@@ -134,8 +134,10 @@ bool AliceO2::Base::DataHeader::operator==(const DataOrigin& that)
 //_________________________________________________________________________________________________
 bool AliceO2::Base::DataHeader::operator==(const DataDescription& that)
 {
-  return (that.dataDescriptionInt == gDataDescriptionAny.dataDescriptionInt ||
-          that.dataDescriptionInt == dataDescriptionInt );
+  return ((that.dataDescriptionInt[0] == gDataDescriptionAny.dataDescriptionInt[0] &&
+	   that.dataDescriptionInt[1] == gDataDescriptionAny.dataDescriptionInt[1]) ||
+          (that.dataDescriptionInt[0] == dataDescriptionInt[0] &&
+	   that.dataDescriptionInt[1] == dataDescriptionInt[1] ));
 }
 
 //_________________________________________________________________________________________________

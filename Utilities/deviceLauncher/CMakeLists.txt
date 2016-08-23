@@ -1,5 +1,5 @@
 # @author Matthias Richter
-# @brief  cmake setup for module devices/Generic
+# @brief  cmake setup for module Utilities/deviceLauncher
 
 set(INCLUDE_DIRECTORIES
 )

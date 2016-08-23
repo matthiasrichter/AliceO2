@@ -433,6 +433,17 @@ class ProbabilityModel
   WeightType mTotalWeight;
 };
 
+template<class CodecType,
+         typename ParameterModel
+         >
+class MultiParameterCodec {
+public:
+  MultiParameterCodec();
+  ~MultiParameterCodec();
+
+private:
+};
+
 } // namespace data_compression
 } // namespace o2
 #endif

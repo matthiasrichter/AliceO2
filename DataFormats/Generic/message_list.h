@@ -38,7 +38,7 @@ class messageList {
   /// comparison metric for selection of elements
   /// an external function can be defined by the caller of begin() to
   /// apply a selection of elements
-  typedef std::function<bool(const HdrT& hdr)> HdrComparison;
+  typedef std::function<bool(const header_type& hdr)> HdrComparison;
 
   messageList() {}
   messageList(const messageList& other); // not yet implemented
@@ -49,11 +49,11 @@ class messageList {
   /// both header and payload message parts are required to add an entry
   /// the actual header of type HdrT is extracted from the header
   /// message part.
-  int add(MsgT& headerMsg, MsgT& payloadMsg) {
+  int add(message_type& headerMsg, message_type& payloadMsg) {
     // conversion relies on the conversion operator for complex types
     const uint8_t* headerData = headerMsg;
 
-    const HdrT* srcHeader = reinterpret_cast<const HdrT*>(headerData);
+    const header_type* srcHeader = reinterpret_cast<const header_type*>(headerData);
     // TODO: consistency check
     mDataArray.push_back(messagePair(*srcHeader, payloadMsg));
 
@@ -75,15 +75,15 @@ class messageList {
    * message class possibly both ways can be served at the same time
    */
   struct messagePair {
-    HdrT  mHeader;
-    MsgT* mPayload;
+    header_type  mHeader;
+    message_type* mPayload;
 
-    messagePair(MsgT& payload) : mHeader(), mPayload(&payload) {
-      memset(&mHeader, 0, sizeof(HdrT));
+    messagePair(message_type& payload) : mHeader(), mPayload(&payload) {
+      memset(&mHeader, 0, sizeof(header_type));
     }
 
-    messagePair(const HdrT& header, MsgT& payload) : mHeader(), mPayload(&payload) {
-      memcpy(&mHeader, &header, sizeof(HdrT));
+    messagePair(const header_type& header, message_type& payload) : mHeader(), mPayload(&payload) {
+      memcpy(&mHeader, &header, sizeof(header_type));
     }
   };
   typedef typename std::vector<messagePair>::iterator pairIt_t;
@@ -104,10 +104,15 @@ class messageList {
    * An optional comparison metric @ref HdrComparison can be used to provide
    * a selection of elements.
    */
+  typedef std::iterator<std::forward_iterator_tag, message_type> _iterator_base;
+
   class iterator {
    public:
     typedef iterator self_type;
-    typedef MsgT value_type;
+    // not completely understood: while value_type can be used from the iterator
+    // base (std::iterator), the reference has to be defined once again
+    typedef typename _iterator_base::reference reference;
+    typedef typename _iterator_base::pointer  pointer;
 
     iterator(const pairIt_t& dataIterator, const pairIt_t& iteratorRange,
 	     const HdrComparison hdrsel = HdrComparison())
@@ -135,17 +140,17 @@ class messageList {
     self_type operator++(int unused) {self_type copy(*this); ++*this; return copy;}
     // TODO: given the fact that the data which is hold is a pointer, it always needs to be
     // valid for dereference
-    MsgT& operator*() { return *((*mDataIterator).mPayload);}
-    MsgT* operator->() { return (*mDataIterator).mPayload;}
+    reference operator*() { return *((*mDataIterator).mPayload);}
+    pointer operator->() { return (*mDataIterator).mPayload;}
 
     /** return header at iterator position */
-    HdrT& getHdr() const {return (*mDataIterator).mHeader;}
+    header_type& getHdr() const {return (*mDataIterator).mHeader;}
 
     bool operator==(const self_type& other) { return mDataIterator == other.mDataIterator; }
     bool operator!=(const self_type& other) { return mDataIterator != other.mDataIterator; }
 
     /** conversion operator to PayloadMetaData_t struct */
-    operator HdrT() {return (*mDataIterator).mHeader;}
+    operator header_type() {return (*mDataIterator).mHeader;}
     /** return size of payload */
     size_t size() {return (*mDataIterator).mHeader.mPayloadSize;}
 

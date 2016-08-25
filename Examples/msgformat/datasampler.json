@@ -1,0 +1,16 @@
+{
+    "fairMQOptions":
+    {
+        "devices":
+        [{
+            "id": "sampler",
+            "channel":
+            {
+                "name": "output",
+                "address": "tcp://*:48000",
+                "type": "pub",
+                "method": "bind"
+            }
+        }]
+    }
+}

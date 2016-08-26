@@ -1,7 +1,7 @@
 //-*- Mode: C++ -*-
 
-#ifndef DATASAMPLER_H
-#define DATASAMPLER_H
+#ifndef DATARECEIVER_H
+#define DATARECEIVER_H
 //****************************************************************************
 //* This file is free software: you can redistribute it and/or modify        *
 //* it under the terms of the GNU General Public License as published by     *
@@ -14,10 +14,10 @@
 //* any purpose. It is provided "as is" without express or implied warranty. *
 //****************************************************************************
 
-//  @file   DataSampler.h
+//  @file   DataReceiver.h
 //  @author Matthias Richter
 //  @since  2016-08-24
-//  @brief  Sampler device for test of the in-memory format
+//  @brief  Receiver device for test of the in-memory format
 
 #include "FairMQDevice.h"
 
@@ -25,19 +25,22 @@ namespace AliceO2 {
 namespace Examples {
 namespace MsgFormat {
 
-class DataSampler : public FairMQDevice {
+class DataReceiver : public FairMQDevice {
   public:
-    DataSampler(int rate = 100000);
-    virtual ~DataSampler();
+    DataReceiver();
+    virtual ~DataReceiver();
 
   protected:
     virtual void Run();
 
   private:
     int mPeriod;
+
+    static constexpr char* mgControlChannelId = "control";
+    static constexpr char* mgDataChannelId = "data";
 };
 
 };// namespace MsgFormat
-};// namespace Examples 
+};// namespace Examples
 };// namespace AliceO2
 #endif

@@ -1,8 +1,8 @@
 //****************************************************************************
 //* This file is free software: you can redistribute it and/or modify        *
 //* it under the terms of the GNU General Public License as published by     *
-//* the Free Software Foundation, either version 3 of the License, or	     *
-//* (at your option) any later version.					     *
+//* the Free Software Foundation, either version 3 of the License, or        *
+//* (at your option) any later version.                                      *
 //*                                                                          *
 //* Primary Authors: Matthias Richter <richterm@scieq.net>                   *
 //*                                                                          *
@@ -18,11 +18,12 @@
 #include "DataSampler.h"
 #include <chrono>
 #include <thread>
-#include <memory.h>
+#include <memory>
+#include <string>
 
-AliceO2::Examples::MsgFormat::DataSampler::DataSampler()
+AliceO2::Examples::MsgFormat::DataSampler::DataSampler(int rate)
   : FairMQDevice()
-  , mPeriod(100000)
+  , mPeriod(rate)
 {
 }
 
@@ -32,6 +33,10 @@ AliceO2::Examples::MsgFormat::DataSampler::~DataSampler()
 
 void AliceO2::Examples::MsgFormat::DataSampler::Run()
 {
+  std::string channelId;
+  for ( auto channelIt : fChannels ) {
+    channelId = channelIt.first;
+  }
   while (CheckCurrentState(RUNNING)) {
     std::this_thread::sleep_for (std::chrono::microseconds(mPeriod));
 
@@ -41,7 +46,6 @@ void AliceO2::Examples::MsgFormat::DataSampler::Run()
     memcpy(msg->GetData(), txtMessage.c_str(), msg->GetSize());
 
     // Send out the output message
-    Send(msg, "output");
+    Send(msg, channelId);
   }
 }
-

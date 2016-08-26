@@ -1,8 +1,8 @@
 //****************************************************************************
 //* This file is free software: you can redistribute it and/or modify        *
 //* it under the terms of the GNU General Public License as published by     *
-//* the Free Software Foundation, either version 3 of the License, or	     *
-//* (at your option) any later version.					     *
+//* the Free Software Foundation, either version 3 of the License, or        *
+//* (at your option) any later version.                                      *
 //*                                                                          *
 //* Primary Authors: Matthias Richter <richterm@scieq.net>                   *
 //*                                                                          *
@@ -27,9 +27,19 @@ int main(int argc, char** argv)
     try
     {
         FairMQProgOptions config;
-        config.ParseAll(argc, argv);
 
-        AliceO2::Examples::MsgFormat::DataSampler device;
+        // define custom options
+        boost::program_options::options_description custom_options("Custom options");
+        custom_options.add_options()
+          ("rate", po::value<int>()->default_value(100000), "Publishing rate in micro seconds (us)");
+
+        // add option descritpion to the command line option manager
+        config.AddToCmdLineOptions(custom_options);
+
+        config.ParseAll(argc, argv);
+        int rate = config.GetValue<int>("rate");
+
+        AliceO2::Examples::MsgFormat::DataSampler device(rate);
         runStateMachine(device, config);
     }
     catch (std::exception& e)

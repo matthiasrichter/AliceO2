@@ -16,11 +16,13 @@ set(BUCKET_NAME flp2epn_bucket)
 
 Set(Exe_Names
     dataSampler
+    dataReceiver
     )
 
 
 set(Exe_Source
     runDataSampler.cxx
+    runDataReceiver.cxx
     )
 
 

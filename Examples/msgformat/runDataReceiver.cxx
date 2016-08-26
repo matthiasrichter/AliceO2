@@ -1,7 +1,3 @@
-//-*- Mode: C++ -*-
-
-#ifndef DATASAMPLER_H
-#define DATASAMPLER_H
 //****************************************************************************
 //* This file is free software: you can redistribute it and/or modify        *
 //* it under the terms of the GNU General Public License as published by     *
@@ -14,30 +10,35 @@
 //* any purpose. It is provided "as is" without express or implied warranty. *
 //****************************************************************************
 
-//  @file   DataSampler.h
+//  @file   runDataReceiver.cxx
 //  @author Matthias Richter
 //  @since  2016-08-24
-//  @brief  Sampler device for test of the in-memory format
+//  @brief  Launcher for Receiver device for test of the in-memory format
 
-#include "FairMQDevice.h"
+// compile everything in the exe
+#include "DataReceiver.cxx"
 
-namespace AliceO2 {
-namespace Examples {
-namespace MsgFormat {
+#include "FairMQLogger.h"
+#include "FairMQProgOptions.h"
+#include "runSimpleMQStateMachine.h"
 
-class DataSampler : public FairMQDevice {
-  public:
-    DataSampler(int rate = 100000);
-    virtual ~DataSampler();
+int main(int argc, char** argv)
+{
+    try
+    {
+        FairMQProgOptions config;
+        config.ParseAll(argc, argv);
 
-  protected:
-    virtual void Run();
+        AliceO2::Examples::MsgFormat::DataReceiver device;
+        device.SetProperty(FairMQDevice::LogIntervalInMs, 10000);
+        runStateMachine(device, config);
+    }
+    catch (std::exception& e)
+    {
+        LOG(ERROR) << "Unhandled Exception reached the top of main: "
+                   << e.what() << ", application will now exit";
+        return 1;
+    }
 
-  private:
-    int mPeriod;
-};
-
-};// namespace MsgFormat
-};// namespace Examples 
-};// namespace AliceO2
-#endif
+    return 0;
+}

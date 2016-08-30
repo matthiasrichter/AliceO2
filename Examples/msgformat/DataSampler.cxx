@@ -16,6 +16,7 @@
 //  @brief  Sampler device for test of the in-memory format
 
 #include "DataSampler.h"
+#include "FairMQParts.h"
 #include <chrono>
 #include <thread>
 #include <memory>
@@ -36,6 +37,7 @@ void AliceO2::Examples::MsgFormat::DataSampler::Run()
   std::string channelId;
   for ( auto channelIt : fChannels ) {
     channelId = channelIt.first;
+    break;
   }
   while (CheckCurrentState(RUNNING)) {
     std::this_thread::sleep_for (std::chrono::microseconds(mPeriod));
@@ -44,8 +46,10 @@ void AliceO2::Examples::MsgFormat::DataSampler::Run()
     // Create output message
     std::unique_ptr<FairMQMessage> msg(NewMessage(txtMessage.length()+1));
     memcpy(msg->GetData(), txtMessage.c_str(), msg->GetSize());
+    FairMQParts parts;
+    parts.AddPart(msg);
 
     // Send out the output message
-    Send(msg, channelId);
+    Send(parts, channelId);
   }
 }

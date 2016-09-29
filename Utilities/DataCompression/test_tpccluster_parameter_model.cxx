@@ -108,6 +108,7 @@ int processClusters(const char* filename, F operation)
     unsigned int parameterID = 0;
     uint16_t padrow = cluster.GetPadRow();
     unsigned long long int value = padrow - lastPadrow;
+    if (lastPadrow > padrow) value = 0;
     lastPadrow = padrow;
     if (doBulkOperation) {
       code = (*static_cast<typename boost::mpl::at_c<wrapped_types, 0>::type&>(container)).Encode(value, codelen);

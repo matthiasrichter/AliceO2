@@ -83,17 +83,17 @@ struct incrementModel {
 };
 
 template<typename F>
-int processClusters(const char* filename, F action)
+int processClusters(const char* filename, F operation)
 {
-  bool unroll = !F::doEncoding;
+  bool doBulkOperation = !F::doEncoding;
 
   int nofClusters = 0;
-  if (action.verbosity > 0) {
+  if (operation.verbosity > 0) {
     std::cout << "Processing file " << filename << std::endl;
   }
   ALICE::HLT::TPC::RawClusterArray ca(filename);
 
-  typename F::dispatcher_type::container_type& container = *action.dispatcher;
+  typename F::dispatcher_type::container_type& container = *operation.dispatcher;
   typedef typename F::dispatcher_type::container_type::types wrapped_types;
   typename F::dispatcher_type::code_type code;
   uint16_t codelen = 0;
@@ -101,7 +101,7 @@ int processClusters(const char* filename, F action)
   uint16_t lastPadrow = 0;
   for (auto cluster : ca) {
     ++nofClusters;
-    if (action.verbosity > 1) {
+    if (operation.verbosity > 1) {
       std::cout << "***************************************************" << std::endl;
       std::cout << cluster << std::endl;
     }
@@ -109,46 +109,46 @@ int processClusters(const char* filename, F action)
     uint16_t padrow = cluster.GetPadRow();
     unsigned long long int value = padrow - lastPadrow;
     lastPadrow = padrow;
-    if (unroll) {
+    if (doBulkOperation) {
       code = (*static_cast<typename boost::mpl::at_c<wrapped_types, 0>::type&>(container)).Encode(value, codelen);
     }
-    action(value, code, codelen);
+    operation(value, code, codelen);
     float padval = cluster.GetPad() * 60;
     value = padval;
-    if (unroll) {
+    if (doBulkOperation) {
       code =  (*static_cast<typename boost::mpl::at_c<wrapped_types, 1>::type&>(container)).Encode(value, codelen);
     }
-    action(value, code, codelen);
+    operation(value, code, codelen);
     float timeval = cluster.GetTime() * 25;
     value = timeval;
-    if (unroll) {
+    if (doBulkOperation) {
       code =  (*static_cast<typename boost::mpl::at_c<wrapped_types, 2>::type&>(container)).Encode(value, codelen);
     }
-    action(value, code, codelen);
+    operation(value, code, codelen);
     float sigmaPad2val = cluster.GetSigmaPad2() * 25;
     value = sigmaPad2val;
     if (value > 255) value = 255;
-    if (unroll) {
+    if (doBulkOperation) {
       code =  (*static_cast<typename boost::mpl::at_c<wrapped_types, 3>::type&>(container)).Encode(value, codelen);
     }
-    action(value, code, codelen);
+    operation(value, code, codelen);
     float sigmaTime2val = cluster.GetSigmaTime2() * 10;
     value = sigmaTime2val;
     if (value > 255) value = 255;
-    if (unroll) {
+    if (doBulkOperation) {
       code =  (*static_cast<typename boost::mpl::at_c<wrapped_types, 4>::type&>(container)).Encode(value, codelen);
     }
-    action(value, code, codelen);
+    operation(value, code, codelen);
     value = cluster.GetCharge();
-    if (unroll) {
+    if (doBulkOperation) {
       code =  (*static_cast<typename boost::mpl::at_c<wrapped_types, 5>::type&>(container)).Encode(value, codelen);
     }
-    action(value, code, codelen);
+    operation(value, code, codelen);
     value = cluster.GetQMax();
-    if (unroll) {
+    if (doBulkOperation) {
       code =  (*static_cast<typename boost::mpl::at_c<wrapped_types, 6>::type&>(container)).Encode(value, codelen);
     }
-    action(value, code, codelen);
+    operation(value, code, codelen);
   }
   return nofClusters;
 }
@@ -161,10 +161,10 @@ int main()
 #ifdef VERBOSE
   verbosity = VERBOSE;
 #endif
-#ifdef UNROLL
-  const bool doUnroll = true;
+#ifdef BULK_OPERATION
+  const bool doBulkOperation = true;
 #else
-  const bool doUnroll = false;
+  const bool doBulkOperation = false;
 #endif
 #ifdef CHECK_DECODING
   const bool doDecoding = true;
@@ -199,19 +199,19 @@ int main()
 
   int totalNofClusters = 0;
   system_clock::time_point refTimeLoop = system_clock::now();
-  auto durationAction = std::chrono::duration_cast<TimeScale>(refTimeLoop - refTimeLoop);
+  auto durationOperation = std::chrono::duration_cast<TimeScale>(refTimeLoop - refTimeLoop);
   while ((std::cin.get(firstChar)) && firstChar != '\n' && (std::cin.putback(firstChar)) && (std::getline(std::cin, line))) {
     try {
-      system_clock::time_point refTimeAction = system_clock::now();
+      system_clock::time_point refTimeOperation = system_clock::now();
       switch (mode) {
       case encoding:
-	totalNofClusters += processClusters(line.c_str(), encodeValue<TPCClusterParameterDispatcher_t, !doUnroll, doDecoding>(multiparameterdispatcher, verbosity));
+	totalNofClusters += processClusters(line.c_str(), encodeValue<TPCClusterParameterDispatcher_t, !doBulkOperation, doDecoding>(multiparameterdispatcher, verbosity));
 	break;
       case training:
 	totalNofClusters += processClusters(line.c_str(), incrementModel<TPCClusterParameterDispatcher_t>(multiparameterdispatcher, verbosity));
 	break;
       }
-      durationAction += std::chrono::duration_cast<TimeScale>(std::chrono::system_clock::now() - refTimeAction);
+      durationOperation += std::chrono::duration_cast<TimeScale>(std::chrono::system_clock::now() - refTimeOperation);
     }
     catch (std::exception& e) {
       std::cerr << "Exeption at file " << line << std::endl;
@@ -235,10 +235,10 @@ int main()
   auto durationLoop = std::chrono::duration_cast<TimeScale>(loopEnd - refTimeLoop);
   std::cout << fileCount << " file(s) processed"
 	    << ", " << totalNofClusters << " cluster(s)"
-	    << ", " << totalNofClusters * boost::mpl::size<tpccluster_parameter_models>::value << " action(s)"
+	    << ", " << totalNofClusters * boost::mpl::size<tpccluster_parameter_models>::value << " operation(s)"
 	    << "- total time " << durationTotal.count() << " us"
 	    << "  loop time " << durationLoop.count() << " us"
-	    << "  action time " << durationAction.count() << " us"
+	    << "  operation time " << durationOperation.count() << " us"
 	    << std::endl;
 
   return 0;

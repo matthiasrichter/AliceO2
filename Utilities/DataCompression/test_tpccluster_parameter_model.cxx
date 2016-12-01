@@ -1,10 +1,10 @@
 /**
-g++ --std=c++11 -g -ggdb -I$BOOST_ROOT/include -o test_tpccluster_parameter_model test_tpccluster_parameter_model.cxx
+g++ --std=c++11 -g -ggdb -I$BOOST_ROOT/include -I./include -o test_tpccluster_parameter_model test_tpccluster_parameter_model.cxx
  */
 
 #include "tpccluster_parameter_model.h"
-#include "CodingModelDispatcher.h"
-#include "HuffmanCodec.h"
+#include "DataCompression/CodingModelDispatcher.h"
+#include "DataCompression/HuffmanCodec.h"
 #include "TPCRawCluster.h"
 #include <iostream>
 #include <bitset>

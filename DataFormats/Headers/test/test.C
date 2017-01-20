@@ -4,7 +4,9 @@ void test() {
   gROOT->LoadMacro("DataHeader.cxx++");
   AliceO2::Header::DataHeader d;
   d.dataDescription = AliceO2::Header::DataDescription("TESTDATASAMPLE");
-  d.dataOrigin = AliceO2::Header::DataOrigin("TEST");
+  //d.dataOrigin = AliceO2::Header::DataOrigin("TST");
+  d.dataOrigin = AliceO2::Header::gDataOriginTRD;
+  d.print();
   AliceO2::Header::NameHeader<16> n("AUXILIARYINFO");
   auto b = AliceO2::Header::Block::compose(d,n);
   AliceO2::Header::hexDump("Block dump",b.data(),b.size());

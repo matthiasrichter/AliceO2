@@ -147,6 +147,7 @@ o2_define_bucket(
     DEPENDENCIES
     O2Device_bucket
     O2Device
+    dl
 )
 
 o2_define_bucket(
@@ -155,23 +156,12 @@ o2_define_bucket(
 
     DEPENDENCIES
     common_boost_bucket
-    ${Boost_CHRONO_LIBRARY}
-    ${Boost_DATE_TIME_LIBRARY}
-    ${Boost_RANDOM_LIBRARY}
-    ${Boost_REGEX_LIBRARY}
     ${ZeroMQ_LIBRARY_SHARED}
-    ${OPTIONAL_DDS_LIBRARIES}
     Base
     Headers
-    FairTools
-    FairMQ
-    fairmq_logger
-    pthread
-    dl
 
     INCLUDE_DIRECTORIES
     ${FAIRROOT_INCLUDE_DIR}
-    ${OPTIONAL_DDS_INCLUDE_DIR}
 )
 
 o2_define_bucket(

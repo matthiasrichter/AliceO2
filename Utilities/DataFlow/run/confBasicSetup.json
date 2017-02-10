@@ -4,9 +4,87 @@
         "devices":
         [
         {
+            "id": "heartbeatSampler",
+            "channels":
+            [
+            {
+                "name": "output",
+                "type": "pub",
+                "method": "bind",
+                "sockets":
+                [
+                 { "address": "tcp://*:5540" }
+                ],
+                "sndBufSize": "10"
+            }]
+        },
+
+        {
+            "id": "dataPublisher",
+            "channels":
+            [
+	    {
+                "name": "input",
+                "type": "sub",
+                "method": "connect",
+                "sockets":
+                [
+                 { "address": "tcp://127.0.0.1:5540" }
+		],
+                "rcvBufSize": "10"
+            },
+            {
+                "name": "output",
+                "type": "pub",
+                "method": "bind",
+                "sockets":
+                [
+                 { "address": "tcp://*:5541" }
+                ],
+                "sndBufSize": "10"
+            }]
+        },
+
+        {
+            "id": "writer",
+            "channels":
+            [
+	    {
+                "name": "input",
+                "type": "sub",
+                "method": "connect",
+                "sockets":
+                [
+                 { "address": "tcp://127.0.0.1:5541" }
+		],
+                "rcvBufSize": "10"
+            },
+            {
+                "name": "output",
+                "type": "pub",
+                "method": "bind",
+                "sockets":
+                [
+                 { "address": "tcp://*:5542" }
+                ],
+                "sndBufSize": "10"
+            }]
+        },
+	    
+        {
             "id": "subframeBuilder",
             "channels":
             [
+	    {
+                "name": "input",
+                "type": "sub",
+                "method": "connect",
+                "sockets":
+                [
+                 { "address": "tcp://127.0.0.1:5541" }
+		],
+                "rcvBufSize": "10"
+            },
             {
                 "name": "output",
                 "type": "pub",

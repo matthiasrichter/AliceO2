@@ -62,10 +62,19 @@ public:
   /// currently this is old school: buf,len pairs;
   /// In the end I'd like to move to array_view
   /// when this becomes available (either with C++17 or via GSL)
+  /// we could extend the tooling function to actually check for a data
+  /// header and accept selection in the form of data description, origin,
+  /// and sub specification.
+  /// Furthermore, selection of expected header description can be done
+  /// and a check for the expected data type
+  /// why not a lambda or general function?
   template <typename T>
   bool ForEach(O2Message& parts, bool (T::*memberFunction)(const byte* headerBuffer, size_t headerBufferSize,
                                                            const byte* dataBuffer, size_t dataBufferSize))
   {
+    // TODO: we need a error handling policy here, in any case a handling
+    // of the exception. In the production system, the message should be
+    // marked as bad and the incident be recorded, but the device must not stop
     if ((parts.Size() % 2) != 0)
       throw std::invalid_argument("number of parts in message not even (n%2 != 0)");
 

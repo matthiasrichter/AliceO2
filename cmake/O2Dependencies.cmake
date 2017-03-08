@@ -916,3 +916,16 @@ o2_define_bucket(
     Field
     Generators
 )
+
+o2_define_bucket(
+    NAME
+    legacy_raw_bucket
+
+    DEPENDENCIES
+    common_boost_bucket
+    root_base_bucket
+    Tree RIO # ROOT
+
+    INCLUDE_DIRECTORIES
+    ${ROOT_INCLUDE_DIR}
+)

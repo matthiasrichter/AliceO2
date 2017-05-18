@@ -115,9 +115,9 @@ bool o2::DataFlow::SubframeBuilderDevice::BuildAndSendFrame(FairMQParts &inParts
   {
     LOG(INFO) << "Payload of size " << payloadSize << "received\n";
   }
-  SubframeId sfId = {.timeframeId = hbh->orbit % mOrbitsPerTimeframe,
+  SubframeId sfId = {.timeframeId = hbh->orbit / mOrbitsPerTimeframe,
                      .socketId = 0 };
-  auto ptr = std::make_unique<char>(new char[payloadSize]);
+  auto ptr = std::make_unique<char>(payloadSize);
   memcpy(ptr.get(), sourcePayload, payloadSize);
   SubframeRef sfRef = {.ptr = std::move(ptr),
                        .size = payloadSize};

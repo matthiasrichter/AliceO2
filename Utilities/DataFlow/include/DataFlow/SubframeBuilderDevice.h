@@ -89,6 +89,11 @@ private:
   struct SubframeId {
     size_t timeframeId;
     size_t socketId;
+
+    // operator needed for the equal_range algorithm/ multimap method
+    bool operator<(const SubframeId& rhs) const {
+      return timeframeId < rhs.timeframeId || socketId < rhs.socketId;
+    }
   };
 
   struct SubframeRef {

@@ -12,6 +12,7 @@
 #include "Headers/HeartbeatFrame.h"
 #include "O2Device/O2Device.h"
 #include <cstring>
+#include <map>
 
 class FairMQParts;
 
@@ -49,6 +50,8 @@ public:
   static constexpr const char* OptionKeySelfTriggered = "self-triggered";
   static constexpr const char* OptionKeyInDataFile = "indatafile-name";
   static constexpr const char* OptionKeyDetector = "detector-name";
+  static constexpr const char* OptionKeyFLPId = "flp-id";
+  static constexpr const char* OptionKeyStripHBF = "strip-hbf";
 
   // TODO: this is just a first mockup, remove it
   // Default duration is for now harcoded to 22 milliseconds.
@@ -83,6 +86,16 @@ protected:
   bool BuildAndSendFrame(FairMQParts &parts);
 
 private:
+  struct SubframeId {
+    size_t timeframeId;
+    size_t socketId;
+  };
+
+  struct SubframeRef {
+    std::unique_ptr<char> ptr;
+    int64_t size;
+  };
+
   unsigned mFrameNumber = 0;
   constexpr static uint32_t mOrbitsPerTimeframe = 1;
   constexpr static uint32_t mOrbitDuration = 1000000000;
@@ -90,6 +103,9 @@ private:
   std::string mInputChannelName = "";
   std::string mOutputChannelName = "";
   bool mIsSelfTriggered = false;
+  size_t mFLPId = 0;
+  bool mStripHBF = false;
+  std::multimap<SubframeId, SubframeRef> mHBFmap;
   uint64_t mHeartbeatStart = DefaultHeartbeatStart;
 
   template <typename T>

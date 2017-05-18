@@ -40,6 +40,8 @@ void o2::DataFlow::SubframeBuilderDevice::InitTask()
   mIsSelfTriggered = GetConfig()->GetValue<bool>(OptionKeySelfTriggered);
   mInputChannelName = GetConfig()->GetValue<std::string>(OptionKeyInputChannelName);
   mOutputChannelName = GetConfig()->GetValue<std::string>(OptionKeyOutputChannelName);
+  mFLPId= GetConfig()->GetValue<size_t>(OptionKeyFLPId);
+  mStripHBF= GetConfig()->GetValue<bool>(OptionKeyStripHBF);
 
   if (!mIsSelfTriggered) {
     // depending on whether the device is self-triggered or expects input,
@@ -55,9 +57,14 @@ void o2::DataFlow::SubframeBuilderDevice::InitTask()
 }
 
 // FIXME: how do we actually find out the payload size???
-int64_t extractDetectorPayload(char **payload, char *buffer, size_t bufferSize) {
+int64_t extractDetectorPayloadStrip(char **payload, char *buffer, size_t bufferSize) {
   *payload = buffer + sizeof(HeartbeatHeader);
   return bufferSize - sizeof(HeartbeatHeader) - sizeof(HeartbeatTrailer);
+}
+
+int64_t extractDetectorPayload(char **payload, char *buffer, size_t bufferSize) {
+  *payload = buffer;
+  return bufferSize;
 }
 
 bool o2::DataFlow::SubframeBuilderDevice::BuildAndSendFrame(FairMQParts &inParts)
@@ -73,9 +80,11 @@ bool o2::DataFlow::SubframeBuilderDevice::BuildAndSendFrame(FairMQParts &inParts
   // all CRUs of a FLP in all cases serve a single detector
   o2::Header::DataHeader dh;
   dh.dataDescription = o2::Header::DataDescription("SUBTIMEFRAMEMD");
-  dh.dataOrigin = o2::Header::DataOrigin("TEST");
-  dh.subSpecification = 0;
+  dh.dataOrigin = o2::Header::DataOrigin("FLP");
+  dh.subSpecification = mFLPId;
   dh.payloadSize = sizeof(SubframeMetadata);
+
+  DataHeader payloadheader(*o2::Header::get<DataHeader>((byte*)inParts.At(0)->GetData()));
 
   // subframe meta information as payload
   SubframeMetadata md;
@@ -85,25 +94,18 @@ bool o2::DataFlow::SubframeBuilderDevice::BuildAndSendFrame(FairMQParts &inParts
   LOG(INFO) << "Start time for subframe (" << hbh->orbit << ", "
                                            << mDuration
             << ") " << timeframeIdFromTimestamp(md.startTime, mDuration) << " " << md.startTime<< "\n";
-
-  // send an empty subframe (no detector payload), only the data header
-  // and the subframe meta data are added to the sub timeframe
-  // TODO: this is going to be changed as soon as the device implements
-  // handling of the input data
-  O2Message outgoing;
-
-  // build multipart message from header and payload
-  AddMessage(outgoing, dh, NewSimpleMessage(md));
-
+  // Extract the payload from the HBF
   char *sourcePayload = nullptr;
-  auto payloadSize = extractDetectorPayload(&sourcePayload,
-                                            incomingBuffer,
-                                            inParts.At(1)->GetSize());
-  LOG(INFO) << "Got "  << inParts.Size() << " parts\n";
-  for (auto pi = 0; pi < inParts.Size(); ++pi)
-  {
-    LOG(INFO) << " Part " << pi << ": " << inParts.At(pi)->GetSize() << " bytes \n";
+  int64_t payloadSize = 0;
+  if (mStripHBF) {
+    payloadSize = extractDetectorPayloadStrip(&sourcePayload,
+                                              incomingBuffer,
+                                              inParts.At(1)->GetSize());
+  } else {
+    sourcePayload = incomingBuffer;
+    payloadSize = inParts.At(1)->GetSize();
   }
+
   if (payloadSize <= 0)
   {
     LOG(ERROR) << "Payload is too small: " << payloadSize << "\n";
@@ -113,21 +115,46 @@ bool o2::DataFlow::SubframeBuilderDevice::BuildAndSendFrame(FairMQParts &inParts
   {
     LOG(INFO) << "Payload of size " << payloadSize << "received\n";
   }
+  SubframeId sfId = {.timeframeId = hbh->orbit % mOrbitsPerTimeframe,
+                     .socketId = 0 };
+  auto ptr = std::make_unique<char>(new char[payloadSize]);
+  memcpy(ptr.get(), sourcePayload, payloadSize);
+  SubframeRef sfRef = {.ptr = std::move(ptr),
+                       .size = payloadSize};
+  mHBFmap.emplace(std::make_pair(sfId, std::move(sfRef)));
+  if (mHBFmap.count(sfId) < mOrbitsPerTimeframe)
+    return true;
+  // If we are here, it means we can send the Subtimeframe as we have
+  // enough elements for the given SubframeId
+  // - Calculate the aggregate size of all the HBF payloads.
+  // - Copy all the HBF into payload
+  // - Create the header part
+  // - Create the payload part
+  // - Send
+  size_t sum = 0;
+  auto range = mHBFmap.equal_range(sfId);
+  for (auto hi = range.first, he = range.second; hi != he; ++hi) {
+    sum += hi->second.size;
+  }
 
-  auto *payload = new char[payloadSize]();
-  memcpy(payload, sourcePayload, payloadSize);
-  DataHeader payloadheader(*o2::Header::get<DataHeader>((byte*)inParts.At(0)->GetData()));
+  auto *payload = new char[sum]();
+  size_t offset = 0;
+  for (auto hi = range.first, he = range.second; hi != he; ++hi) {
+    memcpy(payload + offset, hi->second.ptr.get(), hi->second.size);
+    offset += hi->second.size;
+  }
+  payloadheader.payloadSize = sum;
 
-  payloadheader.subSpecification = 0;
-  payloadheader.payloadSize = payloadSize;
+  O2Message outgoing;
+  AddMessage(outgoing, dh, NewSimpleMessage(md));
 
-  // FIXME: take care of multiple HBF per SubtimeFrame
   AddMessage(outgoing, payloadheader,
-             NewMessage(payload, payloadSize,
+             NewMessage(payload, sum,
                         [](void* data, void* hint) { delete[] reinterpret_cast<char *>(hint); }, payload));
   // send message
   Send(outgoing, mOutputChannelName.c_str());
   outgoing.fParts.clear();
+  mHBFmap.erase(sfId);
 
   return true;
 }

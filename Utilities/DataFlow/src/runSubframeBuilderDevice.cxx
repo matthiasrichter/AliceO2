@@ -20,7 +20,13 @@ void addCustomOptions(bpo::options_description& options)
      "Name of the output channel")
     (o2::DataFlow::SubframeBuilderDevice::OptionKeyDetector,
      bpo::value<std::string>()->default_value("TPC"),
-     "Name of detector as data source");
+     "Name of detector as data source")
+    (o2::DataFlow::SubframeBuilderDevice::OptionKeyFLPId,
+     bpo::value<size_t>()->default_value(0),
+     "ID of the FLP used as data source")
+    (o2::DataFlow::SubframeBuilderDevice::OptionKeyStripHBF,
+     bpo::bool_switch()->default_value(false),
+     "Strip HBH & HBT from each HBF");
 }
 
 FairMQDevicePtr getDevice(const FairMQProgOptions& /*config*/)

@@ -13,6 +13,8 @@ g++ --std=c++11 -g -ggdb -I$BOOST_ROOT/include -I./include -o test_tpccluster_pa
 #include <boost/mpl/size.hpp>
 #include <boost/mpl/string.hpp>
 #include <boost/mpl/at.hpp>
+#include <boost/mpl/lambda.hpp>
+#include <boost/mpl/placeholders.hpp>
 
 typedef std::chrono::system_clock system_clock;
 typedef std::chrono::microseconds TimeScale;
@@ -175,7 +177,10 @@ int main()
 
   std::cout << "Testing multi parameter definition:" << std::endl;
 
-  typedef ALICE::O2::CodingModelDispatcher< tpccluster_parameter_models > TPCClusterParameterDispatcher_t;
+  //using models = o2::mpl::do_typewrap<tpccluster_parameter, boost::mpl::lambda<ProbabilityModel<_> >::type>::type;
+  //using codecs = o2::mpl::do_typewrap<models, boost::mpl::lambda<o2::HuffmanModel<_> >::type>::type;
+
+  using TPCClusterParameterDispatcher_t = o2::CodingModelDispatcher< tpccluster_parameter_models >;
   TPCClusterParameterDispatcher_t multiparameterdispatcher;
   multiparameterdispatcher.init();
   (*multiparameterdispatcher).print();

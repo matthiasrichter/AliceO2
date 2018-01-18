@@ -26,7 +26,6 @@
 //  @brief  A component running ALICE HLT code
 
 #include "aliceHLTwrapper/Component.h"
-#include "aliceHLTwrapper/AliHLTDataTypes.h"
 #include "aliceHLTwrapper/SystemInterface.h"
 #include "FairMQLogger.h"
 

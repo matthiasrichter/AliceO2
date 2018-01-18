@@ -71,7 +71,7 @@ Polling period on the input channel
 The output mode of the device, default is O2 format (3)
 .RS 2
 .B 0
-- HOMER format
+- HOMER format (support removed in Jan 2018)
 .br
 .B 1
 - blocks in multiple messages

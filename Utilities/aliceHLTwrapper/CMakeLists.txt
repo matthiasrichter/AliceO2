@@ -7,7 +7,6 @@ O2_SETUP(NAME ${MODULE_NAME})
 
 set(SRCS
     src/SystemInterface.cxx
-    src/HOMERFactory.cxx
     src/WrapperDevice.cxx
     src/Component.cxx
     src/MessageFormat.cxx
@@ -16,7 +15,7 @@ set(SRCS
 
 set(LIBRARY_NAME ${MODULE_NAME})
 
-set(BUCKET_NAME O2DeviceApplication_bucket)
+set(BUCKET_NAME AliceHLTWrapper_bucket)
 
 O2_GENERATE_LIBRARY()
 

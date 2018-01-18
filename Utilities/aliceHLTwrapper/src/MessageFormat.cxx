@@ -26,10 +26,6 @@
 //  @brief  Helper class for message format of ALICE HLT data blocks
 
 #include "aliceHLTwrapper/MessageFormat.h"
-#include "aliceHLTwrapper/HOMERFactory.h"
-#include "aliceHLTwrapper/AliHLTHOMERData.h"
-#include "aliceHLTwrapper/AliHLTHOMERWriter.h"
-#include "aliceHLTwrapper/AliHLTHOMERReader.h"
 
 #include <cstdlib>
 #include <cerrno>
@@ -38,6 +34,7 @@
 #include <memory>
 #include <cassert>
 #include <sstream>
+#include <stdexcept>
 
 using namespace o2::alice_hlt;
 using std::cerr;
@@ -51,7 +48,6 @@ MessageFormat::MessageFormat()
   : mBlockDescriptors()
   , mDataBuffer()
   , mMessages()
-  , mpFactory(nullptr)
   , mOutputMode(kOutputModeO2)
   , mListEvtData()
   , mHeartbeatHeader()
@@ -60,12 +56,6 @@ MessageFormat::MessageFormat()
   // invalidate the heartbeat header and trailer
   mHeartbeatHeader.headerWord = 0;
   mHeartbeatTrailer.trailerWord = 0;
-}
-
-MessageFormat::~MessageFormat()
-{
-  if (mpFactory) delete mpFactory;
-  mpFactory = nullptr;
 }
 
 void MessageFormat::clear()
@@ -108,10 +98,6 @@ int MessageFormat::addMessage(uint8_t* buffer, unsigned size)
     }
     if (readBlockSequence(buffer+position, size-position, mBlockDescriptors) < 0 ||
         (evtData!=nullptr && ((mBlockDescriptors.size()-count) != evtData->fBlockCnt))) {
-      // not in the format of a single block, check if its a HOMER block
-      if (readHOMERFormat(buffer+position, size-position, mBlockDescriptors) < 0 ||
-         (evtData!=nullptr && ((mBlockDescriptors.size()-count) != evtData->fBlockCnt))) {
-        // not in HOMER format either
         if (position>0) {
           // try once more without the assumption of event data header
           position=0;
@@ -119,7 +105,6 @@ int MessageFormat::addMessage(uint8_t* buffer, unsigned size)
           continue;
         }
         return -ENODATA;
-      }
     }
   } while (false);
 
@@ -197,32 +182,6 @@ int MessageFormat::readBlockSequence(uint8_t* buffer, unsigned size,
   return input.size();
 }
 
-int MessageFormat::readHOMERFormat(uint8_t* buffer, unsigned size,
-                                   vector<BlockDescriptor>& descriptorList) const
-{
-  // read message payload in HOMER format
-  if (mpFactory == nullptr) const_cast<MessageFormat*>(this)->mpFactory = new o2::alice_hlt::HOMERFactory;
-  if (buffer == nullptr || mpFactory == nullptr) return -EINVAL;
-  unique_ptr<AliHLTHOMERReader> reader(mpFactory->OpenReaderBuffer(buffer, size));
-  if (reader.get() == nullptr) return -ENOMEM;
-
-  unsigned nofBlocks = 0;
-  if (reader->ReadNextEvent() == 0) {
-    nofBlocks = reader->GetBlockCnt();
-    for (unsigned i = 0; i < nofBlocks; i++) {
-      descriptorList.emplace_back(const_cast<void*>(reader->GetBlockData(i)), reader->GetBlockDataLength(i), kAliHLTVoidDataType, reader->GetBlockDataSpec(i));
-      homer_uint64 id = byteSwap64(reader->GetBlockDataType(i));
-      homer_uint32 origin = byteSwap32(reader->GetBlockDataOrigin(i));
-      memcpy(&descriptorList.back().fDataType.fID, &id,
-             sizeof(id) > kAliHLTComponentDataTypefIDsize ? kAliHLTComponentDataTypefIDsize : sizeof(id));
-      memcpy(&descriptorList.back().fDataType.fOrigin, &origin, 
-             sizeof(origin) > kAliHLTComponentDataTypefOriginSize ? kAliHLTComponentDataTypefOriginSize : sizeof(origin));
-    }
-  }
-
-  return nofBlocks;
-}
-
 int MessageFormat::readO2Format(const vector<BufferDesc_t>& list, std::vector<BlockDescriptor>& descriptorList, HeartbeatHeader& hbh, HeartbeatTrailer& hbt) const
 {
   int partNumber = 0;
@@ -295,26 +254,7 @@ vector<MessageFormat::BufferDesc_t> MessageFormat::createMessages(const AliHLTCo
   mDataBuffer.clear();
   mMessages.clear();
   if (mOutputMode == kOutputModeHOMER) {
-    AliHLTHOMERWriter* pWriter = createHOMERFormat(pOutputBlocks, outputBlockCnt);
-    if (pWriter) {
-      uint32_t position = mDataBuffer.size();
-      uint32_t offset = 0;
-      uint32_t payloadSize = pWriter->GetTotalMemorySize();
-      auto msgSize=payloadSize + (evtData != nullptr?sizeof(AliHLTComponentEventData):0);
-      if (cbAllocate==nullptr) {
-        // make the target in the internal buffer
-        mDataBuffer.resize(position + msgSize);
-      }
-      auto pTarget = MakeTarget(msgSize, position, cbAllocate);
-      if (evtData) {
-        memcpy(pTarget + offset, evtData, sizeof(AliHLTComponentEventData));
-        offset+=sizeof(AliHLTComponentEventData);
-      }
-      pWriter->Copy(pTarget + offset, 0, 0, 0, 0);
-      mpFactory->DeleteWriter(pWriter);
-      offset+=payloadSize;
-      mMessages.emplace_back(pTarget, offset);
-    }
+    throw std::runtime_error("this code branch has been removed in Jan 2018");
   } else if (mOutputMode == kOutputModeMultiPart ||
              mOutputMode == kOutputModeSequence ||
              mOutputMode == kOutputModeO2) {
@@ -508,39 +448,6 @@ uint8_t* MessageFormat::MakeTarget(unsigned size, unsigned position, boost::sign
     }
   }
   return pTarget;
-}
-
-AliHLTHOMERWriter* MessageFormat::createHOMERFormat(const AliHLTComponentBlockData* pOutputBlocks,
-                                                    uint32_t outputBlockCnt) const
-{
-  // send data blocks in HOMER format in one message
-  int iResult = 0;
-  if (mpFactory == nullptr) const_cast<MessageFormat*>(this)->mpFactory = new o2::alice_hlt::HOMERFactory;
-  if (!mpFactory) return nullptr;
-  unique_ptr<AliHLTHOMERWriter> writer(mpFactory->OpenWriter());
-  if (writer.get() == nullptr) return nullptr;
-
-  homer_uint64 homerHeader[kCount_64b_Words];
-  HOMERBlockDescriptor homerDescriptor(homerHeader);
-
-  const AliHLTComponentBlockData* pOutputBlock = pOutputBlocks;
-  for (unsigned blockIndex = 0; blockIndex < outputBlockCnt; blockIndex++, pOutputBlock++) {
-    if (pOutputBlock->fPtr == nullptr && pOutputBlock->fSize > 0) {
-      cerr << "warning: ignoring block " << blockIndex << " because of missing data pointer" << endl;
-    }
-    memset(homerHeader, 0, sizeof(homer_uint64) * kCount_64b_Words);
-    homerDescriptor.Initialize();
-    homer_uint64 id = 0;
-    homer_uint64 origin = 0;
-    memcpy(&id, pOutputBlock->fDataType.fID, sizeof(homer_uint64));
-    memcpy(((uint8_t*)&origin) + sizeof(homer_uint32), pOutputBlock->fDataType.fOrigin, sizeof(homer_uint32));
-    homerDescriptor.SetType(byteSwap64(id));
-    homerDescriptor.SetSubType1(byteSwap64(origin));
-    homerDescriptor.SetSubType2(pOutputBlock->fSpecification);
-    homerDescriptor.SetBlockSize(pOutputBlock->fSize);
-    writer->AddBlock(homerHeader, pOutputBlock->fPtr);
-  }
-  return writer.release();
 }
 
 int MessageFormat::insertEvtData(const AliHLTComponentEventData& evtData)

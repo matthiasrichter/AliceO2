@@ -28,7 +28,7 @@
 #include "aliceHLTwrapper/EventSampler.h"
 #include <FairMQLogger.h>
 #include <FairMQPoller.h>
-#include "aliceHLTwrapper/AliHLTDataTypes.h"
+#include "AliceHLT/AliHLTDataTypes.h"
 #include <options/FairMQProgOptions.h>
 
 #include <boost/thread.hpp>

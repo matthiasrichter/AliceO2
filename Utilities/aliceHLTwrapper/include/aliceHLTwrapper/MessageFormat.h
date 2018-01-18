@@ -27,16 +27,12 @@
 //  @since  2014-12-11
 //  @brief  Helper class for message format of ALICE HLT data blocks
 
-#include "AliHLTDataTypes.h"
-#include "HOMERFactory.h"
+#include "AliceHLT/AliHLTDataTypes.h"
 #include <vector>
 #include <cstdint>
 #include <boost/signals2.hpp>
 #include "Headers/DataHeader.h"
 #include "Headers/HeartbeatFrame.h"
-
-class AliHLTHOMERReader;
-class AliHLTHOMERWriter;
 
 namespace o2 {
 namespace alice_hlt {
@@ -91,7 +87,7 @@ public:
   /// default constructor
   MessageFormat();
   /// destructor
-  ~MessageFormat();
+  ~MessageFormat() = default;
 
   using DataHeader = o2::header::DataHeader;
   using HeartbeatFrameEnvelope = o2::header::HeartbeatFrameEnvelope;
@@ -111,7 +107,7 @@ public:
   };
 
   enum {
-    // all blocks in HOMER format
+    // all blocks in HOMER format (support removed Jan 2018)
     kOutputModeHOMER = 0,
     // each block individually as part of a multi-part output
     kOutputModeMultiPart,
@@ -162,15 +158,8 @@ public:
   // from a buffer
   int readBlockSequence(uint8_t* buffer, unsigned size, std::vector<BlockDescriptor>& descriptorList) const;
 
-  // read message payload in HOMER format
-  int readHOMERFormat(uint8_t* buffer, unsigned size, std::vector<BlockDescriptor>& descriptorList) const;
-
   // read messages in O2 format
   int readO2Format(const std::vector<BufferDesc_t>& list, std::vector<BlockDescriptor>& descriptorList, HeartbeatHeader& hbh, HeartbeatTrailer& hbt) const;
-
-  // create HOMER format from the output blocks
-  AliHLTHOMERWriter* createHOMERFormat(const AliHLTComponentBlockData* pOutputBlocks,
-                                       uint32_t outputBlockCnt) const;
 
   // insert event header to list, sort by time, oldest first
   int insertEvtData(const AliHLTComponentEventData& evtData);
@@ -202,9 +191,7 @@ private:
   std::vector<uint8_t>            mDataBuffer;
   /// list of message payload descriptors
   std::vector<BufferDesc_t>             mMessages;
-  /// HOMER factory for creation and deletion of HOMER readers and writers
-  o2::alice_hlt::HOMERFactory*        mpFactory;
-  /// output mode: HOMER, multi-message, sequential
+  /// output mode: multi-message, sequential, O2
   int mOutputMode;
   /// list of event descriptors
   std::vector<AliHLTComponentEventData> mListEvtData;

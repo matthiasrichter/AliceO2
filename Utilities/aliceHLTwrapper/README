@@ -104,11 +104,7 @@ Component.cxx/.h          all HLT component related code
 WrapperDevice.cxx/.h      specific implementation of FairMQ device
 aliceHLTWrapper.cxx:      executable of the FairMQ device
 runComponent.cxx:         AliRoot HLT interface test program for the Component
-HOMERFactory.cxx/.h:      Originally AliHLTHOMERLibManager from AliRoot
 
 The following headers have been copied from AliRoot, in the future they might be
 taken directly from AliRoot
 AliHLTDataTypes.h         Common data type and function definition for the HLT code
-AliHLTHOMERData.h         Data structure definition for the HOMER interface
-AliHLTHOMERReader.h       Abstract interface for the HOMER reader
-AliHLTHOMERWriter.h       Abstract interface for the HOMER writer

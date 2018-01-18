@@ -27,7 +27,7 @@
 //  @since  2014-05-07
 //  @brief  FairRoot/ALFA interface to ALICE HLT code
 
-#include "AliHLTDataTypes.h"
+#include "AliceHLT/AliHLTDataTypes.h"
 namespace o2 {
 namespace alice_hlt {
 

@@ -27,7 +27,7 @@
 //  @since  2014-05-08
 //  @brief  A component running ALICE HLT code
 
-#include "AliHLTDataTypes.h"
+#include "AliceHLT/AliHLTDataTypes.h"
 #include "MessageFormat.h"
 #include <vector>
 #include <boost/signals2.hpp>
@@ -67,7 +67,6 @@ class SystemInterface;
 ///                 size is determined from the input size and properties
 ///                 of the component
 /// --output-mode   mode of arranging output blocks, @see MessageFormat.h
-///                 0  HOMER format
 ///                 1  blocks in multiple messages
 ///                 2  blocks concatenated in one message (default)
 ///                 3  O2 data format (default)

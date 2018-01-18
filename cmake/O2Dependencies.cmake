@@ -236,6 +236,15 @@ o2_define_bucket(
 
 o2_define_bucket(
     NAME
+    AliceHLTWrapper_bucket
+    DEPENDENCIES
+    O2DeviceApplication_bucket
+    INCLUDE_DIRECTORIES
+    ${CMAKE_SOURCE_DIR}/DataFormats/Legacy/HLT/include
+)
+
+o2_define_bucket(
+    NAME
     flp2epn_bucket
 
     DEPENDENCIES

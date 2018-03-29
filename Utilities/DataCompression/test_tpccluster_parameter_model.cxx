@@ -93,7 +93,7 @@ int processClusters(const char* filename, F operation)
   if (operation.verbosity > 0) {
     std::cout << "Processing file " << filename << std::endl;
   }
-  ALICE::HLT::TPC::RawClusterArray ca(filename);
+  o2::AliceHLT::RawClusterArray ca(filename);
 
   typename F::dispatcher_type::container_type& container = *operation.dispatcher;
   typedef typename F::dispatcher_type::container_type::types wrapped_types;

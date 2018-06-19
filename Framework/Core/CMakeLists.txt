@@ -16,7 +16,6 @@ O2_SETUP(NAME ${MODULE_NAME})
 if (GLFW_FOUND)
   set(GUI_SOURCES src/FrameworkGUIDebugger.cxx
                   src/FrameworkGUIDevicesGraph.cxx
-                  src/FrameworkGUIDataRelayerUsage.cxx
                   src/PaletteHelpers.cxx)
 else()
   set(GUI_SOURCES src/FrameworkDummyDebugger.cxx src/DummyDebugGUI.cxx)
@@ -69,7 +68,6 @@ set(HEADERS
       include/Framework/DataProcessor.h
       include/Framework/DataSpecUtils.h
       include/Framework/FrameworkGUIDevicesGraph.h
-      include/Framework/FrameworkGUIDataRelayerUsage.h
       include/Framework/DeviceMetricsInfo.h
       include/Framework/DeviceSpec.h
       include/Framework/DeviceControl.h

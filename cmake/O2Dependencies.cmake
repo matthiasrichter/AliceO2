@@ -986,6 +986,7 @@ o2_define_bucket(
     pthread
     root_base_bucket
     common_vc_bucket
+    HLTbase AliHLTTPC
     
     INCLUDE_DIRECTORIES
     ${ROOT_INCLUDE_DIR}
@@ -1534,6 +1535,7 @@ o2_define_bucket(
     DEPENDENCIES
     #-- buckets follow
     fairroot_base_bucket
+    lhapdf
 
     #-- precise modules follow
     SimConfig

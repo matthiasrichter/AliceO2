@@ -1,6 +1,7 @@
 #include <vector>
 #include <iomanip>
 #include <memory>
+#include <chrono>
 #include "Framework/WorkflowSpec.h"
 #include "Framework/ConfigParamSpec.h"
 #include "Framework/ControlService.h"
@@ -22,6 +23,7 @@ void customize(std::vector<o2::framework::ConfigParamSpec>& workflowOptions)
 #include "Framework/runDataProcessing.h" // the main driver
 
 using namespace o2::framework;
+using TimeScale = std::chrono::microseconds;
 
 WorkflowSpec defineDataProcessing(ConfigContext const& configcontext)
 {
@@ -54,14 +56,22 @@ WorkflowSpec defineDataProcessing(ConfigContext const& configcontext)
     }
   };
 
-  auto receiver = [nChannels, nRolls](InitContext ic) {
+  auto receiver = [nChannels, nRolls, nPages](InitContext ic) {
     std::shared_ptr<o2::TPC::HardwareClusterDecoder> decoder;
     auto runDecoder = ic.options().get<int>("decoder");
     if (runDecoder) {
       decoder = std::make_shared<o2::TPC::HardwareClusterDecoder>();
     }
+    auto metrics = std::make_shared<std::vector<std::pair<int, int>>>();
+    metrics->resize(nRolls * 5);
+    metrics->clear();
+    auto reftime = std::chrono::system_clock::now();
 
-    return [nChannels, nRolls, decoder](ProcessingContext ctx) {
+    return [nChannels, nRolls, nPages, decoder, reftime, metrics](ProcessingContext ctx) {
+    int iMetric = 0;
+    auto duration = std::chrono::duration_cast<TimeScale>(std::chrono::system_clock::now() - reftime);
+    metrics->emplace_back(iMetric++, duration.count());
+
     static int rollCount = 0;
     if (rollCount > nRolls) {
       //LOG(INFO) << "at " << rollCount;
@@ -71,6 +81,8 @@ WorkflowSpec defineDataProcessing(ConfigContext const& configcontext)
       //LOG(INFO) << "processing channels";
     std::vector<std::pair<const o2::TPC::ClusterHardwareContainer*, std::size_t>> inputList;
 
+    duration = std::chrono::duration_cast<TimeScale>(std::chrono::system_clock::now() - reftime);
+    metrics->emplace_back(iMetric++, duration.count());
     for (int channel = 0; channel < nChannels; channel++) {
       std::string iName = "input" + std::to_string(channel);
       auto ref = ctx.inputs().get(iName.c_str());
@@ -79,6 +91,8 @@ WorkflowSpec defineDataProcessing(ConfigContext const& configcontext)
       inputList.emplace_back( reinterpret_cast<const o2::TPC::ClusterHardwareContainer*>(ref.payload), size / 8192 );
     }
     std::vector<o2::TPC::ClusterNativeContainer> cont;
+    duration = std::chrono::duration_cast<TimeScale>(std::chrono::system_clock::now() - reftime);
+    metrics->emplace_back(iMetric++, duration.count());
     if (decoder) {
       decoder->decodeClusters(inputList, cont);
     }
@@ -86,9 +100,26 @@ WorkflowSpec defineDataProcessing(ConfigContext const& configcontext)
     //  LOG(INFO) << std::setw(4) << nRolls << ": container with " << coll.clusters.size() << " cluster(s)";
     //}
 
+    duration = std::chrono::duration_cast<TimeScale>(std::chrono::system_clock::now() - reftime);
+    metrics->emplace_back(iMetric++, duration.count());
     if (++rollCount >= nRolls) {
       LOG(INFO) << "processed " << rollCount;
       ctx.services().get<ControlService>().readyToQuit(true);
+      int lastTime = -1;
+      int lastId = -1;
+      int set = 0;
+      for (auto & metric : *metrics) {
+	if (lastId >= 0 && lastId >= metric.first) {
+	  set++;
+	}
+	LOG(INFO) << "Metrics dump (" << nRolls << "/" << nChannels << "/" << nPages << "): "
+		  << std::setw(4) << set << " "
+		  << std::setw(2) << metric.first << " "
+		  << std::setw(8) << metric.second << " "
+		  << std::setw(8) << (lastTime > 0 ? metric.second - lastTime : 0);
+	lastTime = metric.second;
+	lastId = metric.first;
+      }
     }
   };
   };

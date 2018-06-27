@@ -63,9 +63,9 @@ DataRelayer::DataRelayer(const CompletionPolicy& policy,
     mCompletionPolicy{policy}
 {
   setPipelineLength(DEFAULT_PIPELINE_LENGTH);
-  for (size_t ci = 0; ci < mCache.size(); ci++) {
-    metrics.send({ 0, std::string("data_relayer/") + std::to_string(ci) });
-  }
+  //for (size_t ci = 0; ci < mCache.size(); ci++) {
+  //  metrics.send({ 0, std::string("data_relayer/") + std::to_string(ci) });
+  //}
 }
 
 /// This does the mapping between a route and a InputSpec. The
@@ -173,7 +173,7 @@ DataRelayer::relay(std::unique_ptr<FairMQMessage> &&header,
     for (size_t ai = slotIndex*numInputTypes, ae = ai + numInputTypes; ai != ae ; ++ai) {
       cache[ai].header.reset(nullptr);
       cache[ai].payload.reset(nullptr);
-      metrics.send({ 0, std::string("data_relayer/") + std::to_string(ai) });
+      //metrics.send({ 0, std::string("data_relayer/") + std::to_string(ai) });
     }
   };
 
@@ -193,7 +193,7 @@ DataRelayer::relay(std::unique_ptr<FairMQMessage> &&header,
     dirty[slotIndex] = true;
     auto cacheIdx = numInputTypes * slotIndex + input;
     PartRef& currentPart = cache[cacheIdx];
-    metrics.send({ 1, std::string("data_relayer/") + std::to_string(cacheIdx) });
+    //metrics.send({ 1, std::string("data_relayer/") + std::to_string(cacheIdx) });
     PartRef ref{std::move(header), std::move(payload)};
     currentPart = std::move(ref);
     timeslices[slotIndex] = {timeslice};
@@ -322,7 +322,7 @@ DataRelayer::getInputsForTimeslice(size_t timeslice) {
   // automatically discarded by the relay method.
   auto moveHeaderPayloadToOutput = [&messages, &cache, &timeslices, &numInputTypes, &metrics](size_t ti, size_t arg) {
     auto cacheId = ti * numInputTypes + arg;
-    metrics.send({ 2, "data_relayer/" + std::to_string(cacheId) });
+    //metrics.send({ 2, "data_relayer/" + std::to_string(cacheId) });
     messages.emplace_back(std::move(cache[cacheId].header));
     messages.emplace_back(std::move(cache[cacheId].payload));
     timeslices[ti % timeslices.size()].value += 1;
@@ -367,8 +367,8 @@ DataRelayer::setPipelineLength(size_t s) {
   auto numInputTypes = countDistinctTypes(mInputRoutes);
   assert(numInputTypes);
   mCache.resize(numInputTypes * mTimeslices.size());
-  mMetrics.send({ (int)numInputTypes, "data_relayer/h" });
-  mMetrics.send({ (int)mTimeslices.size(), "data_relayer/w" });
+  //mMetrics.send({ (int)numInputTypes, "data_relayer/h" });
+  //mMetrics.send({ (int)mTimeslices.size(), "data_relayer/w" });
 }
 
 }

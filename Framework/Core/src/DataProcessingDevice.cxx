@@ -127,7 +127,7 @@ DataProcessingDevice::HandleData(FairMQParts &iParts, int /*index*/) {
   // to the implementation details of the messaging layer.
   auto isValidInput = [&monitoringService, &parts]() -> bool {
     // monitoringService.send({ (int)parts.Size(), "inputs/parts/total" });
-    monitoringService.send({ (int)parts.Size(), "inputs/parts/total" });
+    //monitoringService.send({ (int)parts.Size(), "inputs/parts/total" });
 
     //for (size_t i = 0; i < parts.Size() ; ++i) {
     //  LOG(DEBUG) << " part " << i << " is " << parts.At(i)->GetSize() << " bytes";
@@ -162,7 +162,7 @@ DataProcessingDevice::HandleData(FairMQParts &iParts, int /*index*/) {
   auto reportError = [&errorCount, &monitoringService](const char* message) {
     LOG(ERROR) << message;
     errorCount++;
-    monitoringService.send({ errorCount, "dataprocessing/errors" });
+    //monitoringService.send({ errorCount, "dataprocessing/errors" });
   };
 
   auto putIncomingMessageIntoCache = [&parts,&relayer,&reportError]() {
@@ -198,10 +198,10 @@ DataProcessingDevice::HandleData(FairMQParts &iParts, int /*index*/) {
   auto getReadyActions = [&relayer, &completed, &monitoringService]() -> std::vector<DataRelayer::RecordAction> {
     //LOG(DEBUG) << "Getting parts to process";
     int pendingInputs = (int)relayer.getParallelTimeslices() - completed.size();
-    monitoringService.send({ pendingInputs, "inputs/relayed/pending" });
-    if (completed.empty()) {
-      monitoringService.send({ 1, "inputs/relayed/incomplete" });
-    }
+    //monitoringService.send({ pendingInputs, "inputs/relayed/pending" });
+    //if (completed.empty()) {
+    //  monitoringService.send({ 1, "inputs/relayed/incomplete" });
+    //}
     return completed;
   };
 
@@ -222,14 +222,14 @@ DataProcessingDevice::HandleData(FairMQParts &iParts, int /*index*/) {
                              &context, &rootContext, &serviceRegistry, &device](int i, InputRecord& record) {
     if (statefulProcess) {
       //LOG(DEBUG) << "PROCESSING:START:" << i;
-      monitoringService.send({ processingCount++, "dataprocessing/stateful_process" });
+      //monitoringService.send({ processingCount++, "dataprocessing/stateful_process" });
       ProcessingContext processContext{record, serviceRegistry, allocator};
       statefulProcess(processContext);
       //LOG(DEBUG) << "PROCESSING:END:" << i;
     }
     if (statelessProcess) {
       //LOG(DEBUG) << "PROCESSING:START:" << i;
-      monitoringService.send({ processingCount++, "dataprocessing/stateless_process" });
+      //monitoringService.send({ processingCount++, "dataprocessing/stateless_process" });
       ProcessingContext processContext{record, serviceRegistry, allocator};
       statelessProcess(processContext);
       //LOG(DEBUG) << "PROCESSING:END:" << i;
@@ -242,7 +242,7 @@ DataProcessingDevice::HandleData(FairMQParts &iParts, int /*index*/) {
   auto errorHandling = [&errorCallback, &monitoringService, &serviceRegistry](std::exception& e, InputRecord& record) {
     LOG(ERROR) << "Exception caught: " << e.what() << std::endl;
     if (errorCallback) {
-      monitoringService.send({ 1, "error" });
+      //monitoringService.send({ 1, "error" });
       ErrorContext errorContext{record, serviceRegistry, e};
       errorCallback(errorContext);
     }
@@ -366,13 +366,13 @@ DataProcessingDevice::HandleData(FairMQParts &iParts, int /*index*/) {
       for (size_t ai = 0; ai != record.size(); ai++) {
         auto cacheId = action.cacheLineIdx * record.size() + ai;
         auto state = record.isValid(ai) ? 2 : 0;
-        monitoringService.send({ state, "data_relayer/" + std::to_string(cacheId) });
+        //monitoringService.send({ state, "data_relayer/" + std::to_string(cacheId) });
       }
       dispatchProcessing(action.cacheLineIdx, record);
       for (size_t ai = 0; ai != record.size(); ai++) {
         auto cacheId = action.cacheLineIdx * record.size() + ai;
         auto state = record.isValid(ai) ? 3 : 0;
-        monitoringService.send({ state, "data_relayer/" + std::to_string(cacheId) });
+        //monitoringService.send({ state, "data_relayer/" + std::to_string(cacheId) });
       }
     } catch(std::exception &e) {
       errorHandling(e, record);

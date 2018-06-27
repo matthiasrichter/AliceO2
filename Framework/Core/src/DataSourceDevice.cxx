@@ -41,16 +41,16 @@ DataSourceDevice::DataSourceDevice(const DeviceSpec &spec, ServiceRegistry &regi
 }
 
 void DataSourceDevice::Init() {
-  LOG(DEBUG) << "DataSourceDevice::InitTask::START\n";
-  LOG(DEBUG) << "Init thread" << pthread_self();
+  //LOG(DEBUG) << "DataSourceDevice::InitTask::START\n";
+  //LOG(DEBUG) << "Init thread" << pthread_self();
   std::unique_ptr<ParamRetriever> retriever{new FairOptionsRetriever(GetConfig())};
   mConfigRegistry = std::move(std::make_unique<ConfigParamRegistry>(std::move(retriever)));
   if (mInit) {
-    LOG(DEBUG) << "Found onInit method. Executing";
+    //LOG(DEBUG) << "Found onInit method. Executing";
     InitContext initContext{*mConfigRegistry,mServiceRegistry};
     mStatefulProcess = mInit(initContext);
   }
-  LOG(DEBUG) << "DataSourceDevice::InitTask::END";
+  //LOG(DEBUG) << "DataSourceDevice::InitTask::END";
 }
 
 void DataSourceDevice::PreRun() { mServiceRegistry.get<CallbackService>()(CallbackService::Id::Start); }
@@ -71,8 +71,8 @@ bool DataSourceDevice::ConditionalRun() {
     }
     mLastTime = std::chrono::duration_cast<TimeScale>(std::chrono::system_clock::now() - reftime).count();
   }
-  LOG(DEBUG) << "DataSourceDevice::Processing::START";
-  LOG(DEBUG) << "ConditionalRun thread" << pthread_self();
+  //LOG(DEBUG) << "DataSourceDevice::Processing::START";
+  //LOG(DEBUG) << "ConditionalRun thread" << pthread_self();
   // This is dummy because a source does not really have inputs.
   // However, in order to be orthogonal between sources and
   // processing code, we still specify it.
@@ -90,15 +90,15 @@ bool DataSourceDevice::ConditionalRun() {
 
     ProcessingContext processingContext{dummyInputs, mServiceRegistry, mAllocator};
     if (mStatelessProcess) {
-      LOG(DEBUG) << "Has stateless process callback";
+      //LOG(DEBUG) << "Has stateless process callback";
       mStatelessProcess(processingContext);
     }
     if (mStatefulProcess) {
-      LOG(DEBUG) << "Has stateful process callback";
+      //LOG(DEBUG) << "Has stateful process callback";
       mStatefulProcess(processingContext);
     }
     size_t nMsg = mContext.size() + mRootContext.size();
-    LOG(DEBUG) << "Process produced " << nMsg << " messages";
+    //LOG(DEBUG) << "Process produced " << nMsg << " messages";
     DataProcessor::doSend(*this, mContext);
     DataProcessor::doSend(*this, mRootContext);
   } catch(std::exception &e) {
@@ -106,14 +106,14 @@ bool DataSourceDevice::ConditionalRun() {
       ErrorContext errorContext{dummyInputs, mServiceRegistry, e};
       mError(errorContext);
     } else {
-      LOG(DEBUG) << "Uncaught exception: " << e.what();
+      //LOG(DEBUG) << "Uncaught exception: " << e.what();
     }
   } catch(...) {
-    LOG(DEBUG) << "Unknown exception type.";
-    LOG(DEBUG) << "DataSourceDevice::Processing::END";
+    //LOG(DEBUG) << "Unknown exception type.";
+    //LOG(DEBUG) << "DataSourceDevice::Processing::END";
     return false;
   }
-  LOG(DEBUG) << "DataSourceDevice::Processing::END";
+  //LOG(DEBUG) << "DataSourceDevice::Processing::END";
   return true;
 }
 

@@ -212,7 +212,7 @@ DataRelayer::relay(std::unique_ptr<FairMQMessage> &&header,
   }
 
   auto timeslice = getTimeslice();
-  LOG(DEBUG) << "Received timeslice" << timeslice;
+  //LOG(DEBUG) << "Received timeslice" << timeslice;
   if (isValidTimeslice(timeslice) == false) {
     LOG(ERROR) << "Could not determine the timeslice for input";
     return WillNotRelay;

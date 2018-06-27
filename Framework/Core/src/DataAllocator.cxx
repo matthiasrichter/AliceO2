@@ -93,7 +93,7 @@ DataAllocator::adoptChunk(const Output& spec, char *buffer, size_t size, fairmq_
   // FIXME: how do we want to use subchannels? time based parallelism?
   FairMQMessagePtr payloadMessage = mDevice->NewMessageFor(channel, 0, buffer, size, freefn, hint);
   auto dataPtr = payloadMessage->GetData();
-  LOG(DEBUG) << "New payload at " << payloadMessage->GetData();
+  //LOG(DEBUG) << "New payload at " << payloadMessage->GetData();
   auto dataSize = payloadMessage->GetSize();
   parts.AddPart(std::move(headerMessage));
   parts.AddPart(std::move(payloadMessage));

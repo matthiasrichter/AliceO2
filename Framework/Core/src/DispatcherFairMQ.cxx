@@ -72,7 +72,7 @@ void DispatcherFairMQ::processCallback(ProcessingContext& ctx, Dispatcher::Berno
       FairMQMessagePtr msgPayload(device->NewMessage(payloadCopy, header->payloadSize, cleanupFcn, payloadCopy));
 
       int bytesSent = device->Send(msgPayload, channel);
-      LOG(DEBUG) << "Payload bytes sent: " << bytesSent;
+      //LOG(DEBUG) << "Payload bytes sent: " << bytesSent;
     }
   }
 }

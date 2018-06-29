@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <memory>
 #include <chrono>
+#include "Headers/DataHeader.h"
 #include "Framework/WorkflowSpec.h"
 #include "Framework/ConfigParamSpec.h"
 #include "Framework/ControlService.h"
@@ -15,6 +16,7 @@
 void customize(std::vector<o2::framework::ConfigParamSpec>& workflowOptions)
 {
   std::vector<o2::framework::ConfigParamSpec> options{
+    { "senders", o2::framework::VariantType::Int, 1, { "number of senders" } },
     { "channels", o2::framework::VariantType::Int, 1, { "number of channels" } },
     { "pages", o2::framework::VariantType::Int, 128, { "number of pages" } },
     { "rolls", o2::framework::VariantType::Int, 10, { "number of rolls" } }
@@ -29,19 +31,35 @@ using TimeScale = std::chrono::microseconds;
 
 WorkflowSpec defineDataProcessing(ConfigContext const& configcontext)
 {
+  auto nSenders = configcontext.options().get<int>("senders");
   auto nChannels = configcontext.options().get<int>("channels");
   auto nRolls = configcontext.options().get<int>("rolls");
   auto nPages = configcontext.options().get<int>("pages");
 
-  std::vector<OutputSpec> oSpecs;
-  std::vector<InputSpec> iSpecs;
-  for (size_t i = 0 ; i < nChannels; i++) {
-    oSpecs.emplace_back( "TST", "DATA", i, Lifetime::Timeframe );
-    std::string iName = "input" + std::to_string(i);
-    iSpecs.push_back( {iName.c_str(), "TST", "DATA", i, Lifetime::Timeframe} );
+  if (nSenders > 16) {
+    LOG(ERROR) << "no more than 16 senders supported";
+    return WorkflowSpec{};
   }
 
-  auto sender = [nChannels, nRolls, nPages](ProcessingContext ctx) {
+  auto makeName = [] (size_t s, size_t c) {
+    std::string name = "input" + std::to_string(s) + "_" + std::to_string(c);
+    return std::move(name);
+  };
+
+  std::vector<std::vector<OutputSpec>> oSpecs;
+  std::vector<InputSpec> iSpecs;
+  for (size_t sn = 0 ; sn < nSenders; sn++) {
+    oSpecs.emplace_back();
+    for (size_t ch = 0 ; ch < nChannels; ch++) {
+      o2::header::DataHeader::SubSpecificationType sspec = sn << 16 | ch;
+      oSpecs.back().emplace_back( "TST" , "DATA", sspec, Lifetime::Timeframe );
+      std::string iName = makeName(sn, ch);
+      iSpecs.push_back( {iName.c_str(), "TST" , "DATA", sspec, Lifetime::Timeframe} );
+    }
+  }
+
+  auto sender = [nChannels, nRolls, nPages](size_t sn) {
+    return [nChannels, nRolls, nPages, sn](ProcessingContext ctx) {
     static int rollCount = 0;
     if (++rollCount > nRolls) {
       //LOG(INFO) << "ignoring after " << rollCount;
@@ -50,12 +68,14 @@ WorkflowSpec defineDataProcessing(ConfigContext const& configcontext)
     }
 
     for (size_t i = 0; i < nChannels; i++) {
-      auto outputPages = ctx.outputs().make<o2::TPC::ClusterHardwareContainer8kb>(Output{ "TST", "DATA", i }, nPages);
+      o2::header::DataHeader::SubSpecificationType sspec = sn << 16 | i;
+      auto outputPages = ctx.outputs().make<o2::TPC::ClusterHardwareContainer8kb>(Output{ "TST", "DATA", sspec }, nPages);
       for (auto& outputPage : outputPages) {
 	o2::TPC::ClusterHardwareContainer* clusterContainer = outputPage.getContainer();
 	clusterContainer->numberOfClusters = outputPage.getMaxNumberOfClusters();
       }
     }
+  };
   };
 
   auto receiver = [nChannels, nRolls, nPages](InitContext ic) {
@@ -85,9 +105,7 @@ WorkflowSpec defineDataProcessing(ConfigContext const& configcontext)
 
     duration = std::chrono::duration_cast<TimeScale>(std::chrono::system_clock::now() - reftime);
     metrics->emplace_back(iMetric++, duration.count());
-    for (int channel = 0; channel < nChannels; channel++) {
-      std::string iName = "input" + std::to_string(channel);
-      auto ref = ctx.inputs().get(iName.c_str());
+    for (auto ref : ctx.inputs()) {
       auto size = o2::framework::DataRefUtils::getPayloadSize(ref);
       //LOG(INFO) << std::setw(4) << nRolls << " - channel " << std::setw(3) << channel << ": " << size;
       inputList.emplace_back( reinterpret_cast<const o2::TPC::ClusterHardwareContainer*>(ref.payload), size / 8192 );
@@ -150,10 +168,12 @@ WorkflowSpec defineDataProcessing(ConfigContext const& configcontext)
   };
   };
 
-  WorkflowSpec specs{
-    { "source", {}, oSpecs, AlgorithmSpec{sender} },
-    { "sink", iSpecs, {}, AlgorithmSpec{receiver}, { { "decoder", o2::framework::VariantType::Int, 1, { "run decoder" } } } }
-  };
+  WorkflowSpec specs;
+  for (size_t sn = 0; sn < nSenders; sn++) {
+    std::string name = "source" + std::to_string(sn);
+    specs.push_back( { name, {}, oSpecs[sn], AlgorithmSpec{sender(sn)} } );
+  }
+  specs.push_back( { "sink", iSpecs, {}, AlgorithmSpec{receiver}, { { "decoder", o2::framework::VariantType::Int, 1, { "run decoder" } } } } );
 
   return std::move(specs);
 }

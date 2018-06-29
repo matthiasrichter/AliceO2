@@ -78,7 +78,7 @@ WorkflowSpec defineDataProcessing(ConfigContext const& configcontext)
   };
   };
 
-  auto receiver = [nChannels, nRolls, nPages](InitContext ic) {
+  auto receiver = [nChannels, nRolls, nPages, nSenders](InitContext ic) {
     std::shared_ptr<o2::TPC::HardwareClusterDecoder> decoder;
     auto runDecoder = ic.options().get<int>("decoder");
     if (runDecoder) {
@@ -89,7 +89,7 @@ WorkflowSpec defineDataProcessing(ConfigContext const& configcontext)
     metrics->clear();
     auto reftime = std::chrono::system_clock::now();
 
-    return [nChannels, nRolls, nPages, decoder, reftime, metrics](ProcessingContext ctx) {
+    return [nSenders, nChannels, nRolls, nPages, decoder, reftime, metrics](ProcessingContext ctx) {
     int iMetric = 0;
     auto duration = std::chrono::duration_cast<TimeScale>(std::chrono::system_clock::now() - reftime);
     metrics->emplace_back(iMetric++, duration.count());
@@ -126,18 +126,20 @@ WorkflowSpec defineDataProcessing(ConfigContext const& configcontext)
       LOG(INFO) << "processed " << rollCount;
       ctx.services().get<ControlService>().readyToQuit(true);
       int varRolls = nRolls;
+      int varSenders = nSenders;
       int varChannels = nChannels;
       int varPages = nPages;
-      int varSize = nPages * nChannels;
+      int varSize = nPages * nChannels * nSenders;
       int varId = -1;
       int varTime = -1;
       int varTimeDiff = 0;
       int varFrameworkTime = 0;
       int set = 0;
-      std::string filename = "metrics_" + std::to_string(nRolls) + "_" + std::to_string(nChannels) + "_" + std::to_string(nPages) + ".root";
+      std::string filename = "metrics_" + std::to_string(nRolls) + "_" + std::to_string(nSenders) + "_" + std::to_string(nChannels) + "_" + std::to_string(nPages) + ".root";
       auto file = std::make_unique<TFile>(filename.c_str(), "RECREATE");
       auto tree = std::make_unique<TTree>("metrics", filename.c_str());
       tree->Branch("rolls", &varRolls, "rolls/I");
+      tree->Branch("senders", &varChannels, "senders/I");
       tree->Branch("channels", &varChannels, "channels/I");
       tree->Branch("pages", &varPages, "pages/I");
       tree->Branch("size", &varSize, "size/I");
@@ -151,7 +153,7 @@ WorkflowSpec defineDataProcessing(ConfigContext const& configcontext)
 	  set++;
 	  varFrameworkTime = varTimeDiff;
 	}
-	LOG(INFO) << "Metrics dump (" << nRolls << "/" << nChannels << "/" << nPages << "): "
+	LOG(INFO) << "Metrics dump (" << nRolls << "/" << nSenders<< "/" << nChannels << "/" << nPages << "): "
 		  << std::setw(4) << set << " "
 		  << std::setw(2) << metric.first << " "
 		  << std::setw(8) << metric.second << " "

@@ -139,7 +139,7 @@ WorkflowSpec defineDataProcessing(ConfigContext const& configcontext)
       auto file = std::make_unique<TFile>(filename.c_str(), "RECREATE");
       auto tree = std::make_unique<TTree>("metrics", filename.c_str());
       tree->Branch("rolls", &varRolls, "rolls/I");
-      tree->Branch("senders", &varChannels, "senders/I");
+      tree->Branch("senders", &varSenders, "senders/I");
       tree->Branch("channels", &varChannels, "channels/I");
       tree->Branch("pages", &varPages, "pages/I");
       tree->Branch("size", &varSize, "size/I");

@@ -306,3 +306,6 @@ timePipeline(DataProcessorSpec{
 
 which will result in two devices, one for even time periods, the other one for
 odd timeperiods.
+
+## Notes:
+usage of DataRefUtils to get payload size and headers

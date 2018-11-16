@@ -310,6 +310,10 @@ odd timeperiods.
 ## Notes:
 usage of DataRefUtils to get payload size and headers
 
+Workflow stuck:
+- check if some processes in the workflow have an ERROR state, inspect log by clicking on the process
+  in the GUI
+
 ## Troubleshooting and Debugging
 Always look in the message summary after terminating the DPL driver app, all messages with severity ERROR and above are summarized there
 

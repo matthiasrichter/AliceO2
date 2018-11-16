@@ -309,3 +309,11 @@ odd timeperiods.
 
 ## Notes:
 usage of DataRefUtils to get payload size and headers
+
+## Troubleshooting and Debugging
+Always look in the message summary after terminating the DPL driver app, all messages with severity ERROR and above are summarized there
+
+- start workflow with '-s', the processes for the different devices will be forked and the SIGSTOP is issued for all
+- attach gdb to the process to be investigated (sudo priviledges required)
+- break main
+- set breakpoint in spec, or init, or process

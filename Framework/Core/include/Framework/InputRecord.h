@@ -39,6 +39,13 @@ namespace framework
 
 struct InputSpec;
 
+template <typename T>
+using select_messageable = std::integral_type<bool,
+                                              is_messageable<T>::value &&
+                                              std::is_same<T, DataRef>::value == false &&
+                                              framework::is_boost_serializable<T>::value == false
+                                              >;
+
 /// @class InputRecord
 /// @brief The input API of the Data Processing Layer
 /// This class holds the inputs which  are being processed by the system while
@@ -164,8 +171,7 @@ class InputRecord
   /// Note: is_messagable also checks that T is not a pointer
   /// @return const ref to specified type
   template <typename T>
-  typename std::enable_if<is_messageable<T>::value && std::is_same<T, DataRef>::value == false && framework::is_boost_serializable<T>::value == false, //
-                          T>::type const&
+  typename std::enable_if<select_messageable<T>::value, T>::type const&
     get(char const* binding) const
   {
     // we need to check the serialization type, the cast makes only sense for

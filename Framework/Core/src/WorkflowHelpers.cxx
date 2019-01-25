@@ -160,7 +160,7 @@ void WorkflowHelpers::injectServiceDevices(WorkflowSpec& workflow)
     auto& consumer = workflow[wi];
     std::string prefix = "internal-dpl-";
     if (consumer.inputs.empty() && consumer.name.compare(0, prefix.size(), prefix) != 0) {
-      consumer.inputs.push_back(InputSpec{ "enumeration", "DPL", "ENUM", consumer.rank, Lifetime::Enumeration});
+      consumer.inputs.push_back(InputSpec{ "enumeration", "DPL", "ENUM", consumer.rank, Lifetime::Enumeration });
       consumer.options.push_back(ConfigParamSpec{ "start-value-enumeration", VariantType::Int, 0, { "initial value for the enumeration" } });
       consumer.options.push_back(ConfigParamSpec{ "end-value-enumeration", VariantType::Int, -1, { "final value for the enumeration" } });
       consumer.options.push_back(ConfigParamSpec{ "step-value-enumeration", VariantType::Int, 1, { "step between one value and the other" } });
@@ -174,7 +174,7 @@ void WorkflowHelpers::injectServiceDevices(WorkflowSpec& workflow)
         } break;
         case Lifetime::Enumeration: {
           auto concrete = DataSpecUtils::asConcreteDataMatcher(input);
-          timer.outputs.emplace_back(OutputSpec{ concrete.origin, concrete.description, concrete.subSpec, Lifetime::Enumeration});
+          timer.outputs.emplace_back(OutputSpec{ concrete.origin, concrete.description, concrete.subSpec, Lifetime::Enumeration });
         } break;
         case Lifetime::Condition:
         case Lifetime::QA:

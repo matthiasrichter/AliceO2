@@ -269,6 +269,19 @@ void showTopologyNodeGraph(WorkspaceGUIState& state,
     if (links.size()) {
       sortedNodes = WorkflowHelpers::topologicalSort(specs.size(), &(links[0].InputIdx), &(links[0].OutputIdx), sizeof(links[0]), links.size());
     }
+    // This is to protect for the cases in which there is a loop in the
+    // definition of the inputs and of the outputs due to the 
+    // way the forwarding creates hidden dependencies between processes.
+    // This should not happen, but apparently it does.
+    for (auto di = 0; di < specs.size(); ++di) {
+      auto fn = std::find_if(sortedNodes.begin(), sortedNodes.end(), [di](TopoIndexInfo const&info) {
+            return di == info.index;
+      });
+      if (fn == sortedNodes.end()) {
+        sortedNodes.push_back({(int)di, 0});
+      }
+    }
+    assert(specs.size() == sortedNodes.size());
     /// We resort them again, this time with the added layer information
     std::sort(sortedNodes.begin(), sortedNodes.end());
 
@@ -278,7 +291,6 @@ void showTopologyNodeGraph(WorkspaceGUIState& state,
       layerMax[node.layer < 1023 ? node.layer : 1023] += 1;
     }
 
-    assert(specs.size() == sortedNodes.size());
     // FIXME: display nodes using topological sort
     // Update positions
     for (int si = 0; si < specs.size(); ++si) {

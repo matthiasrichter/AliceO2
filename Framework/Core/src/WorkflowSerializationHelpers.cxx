@@ -387,23 +387,15 @@ struct WorkflowImporter : public rapidjson::BaseReaderHandler<rapidjson::UTF8<>,
     } else if (in(State::IN_INPUT_BINDING)) {
       binding = s;
     } else if (in(State::IN_INPUT_ORIGIN)) {
-      char buf[4] = { 0, 0, 0, 0 };
-      memcpy(buf, s.c_str(), std::min(s.size(), 4UL));
-      origin = header::DataOrigin{ buf };
+      origin.runtimeInit(s.c_str(), std::min(s.size(), 16UL));
     } else if (in(State::IN_INPUT_DESCRIPTION)) {
-      char buf[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-      memcpy(buf, s.c_str(), std::min(s.size(), 16UL));
-      description = header::DataDescription{ buf };
+      description.runtimeInit(s.c_str(), std::min(s.size(), 16UL));
     } else if (in(State::IN_OUTPUT_BINDING)) {
       binding = s;
     } else if (in(State::IN_OUTPUT_ORIGIN)) {
-      char buf[4] = { 0, 0, 0, 0 };
-      memcpy(buf, s.c_str(), std::min(s.size(), 4UL));
-      origin = header::DataOrigin{ buf };
+      origin.runtimeInit(s.c_str(), std::min(s.size(), 16UL));
     } else if (in(State::IN_OUTPUT_DESCRIPTION)) {
-      char buf[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-      memcpy(buf, s.c_str(), std::min(s.size(), 16UL));
-      description = header::DataDescription{ buf };
+      description.runtimeInit(s.c_str(), std::min(s.size(), 16UL));
     } else if (in(State::IN_OPTION_NAME)) {
       optionName = s;
     } else if (in(State::IN_OPTION_TYPE)) {

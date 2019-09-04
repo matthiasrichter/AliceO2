@@ -13,9 +13,12 @@
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 #include "SimulationDataFormat/MCTruthContainer.h"
+#include "SimulationDataFormat/MCCompLabel.h"
 #include "SimulationDataFormat/LabelContainer.h"
 #include <algorithm>
 #include <iostream>
+#include <TFile.h>
+#include <TTree.h>
 
 namespace o2
 {
@@ -262,6 +265,25 @@ BOOST_AUTO_TEST_CASE(MCTruthContainer_move)
   BOOST_CHECK(container2.getNElements() == 0);
   BOOST_CHECK(container.getIndexedSize() == 3);
   BOOST_CHECK(container.getNElements() == 4);
+}
+
+BOOST_AUTO_TEST_CASE(MCTruthContainer_schema_writer)
+{
+  using TruthElement = o2::MCCompLabel;
+  dataformats::MCTruthContainer<TruthElement> container;
+  container.addElement(0, TruthElement(1, 0, 0, false));
+  container.addElement(0, TruthElement(2, 0, 0, false));
+  container.addElement(1, TruthElement(1, 0, 0, false));
+  container.addElement(2, TruthElement(10, 0, 0, false));
+
+  std::unique_ptr<TFile> testFile(TFile::Open("MCTruthContainer-test.root", "RECREATE"));
+  std::unique_ptr<TTree> testTree = std::make_unique<TTree>("testtree", "testtree");
+
+  auto* branch = testTree->Branch("labels", &container);
+  testTree->Fill();
+  testTree->Write();
+  testTree->SetDirectory(nullptr);
+  testFile->Close();
 }
 
 } // namespace o2

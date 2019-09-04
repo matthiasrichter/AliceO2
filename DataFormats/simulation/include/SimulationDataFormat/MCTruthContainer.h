@@ -51,6 +51,9 @@ class MCTruthContainer
   using IndexElementType = MCTruthHeaderElement;
   using TruthElementType = TruthElement;
 
+  std::vector<MCTruthHeaderElement>
+    mHeaderArray;                        // not used anymore, only for reading the old version
+  std::vector<TruthElement> mTruthArray; // not used anymore, only for reading the old version
   std::vector<char> mData;
 
   size_t getSize(uint dataindex) const
@@ -302,6 +305,26 @@ class MCTruthContainer
   void print(Stream& stream)
   {
     stream << "MCTruthContainer index = " << getIndexedSize() << " for " << getNElements() << " elements(s), total size " << mData.size() << std::endl;
+  }
+
+  void convertLegacy()
+  {
+    if (mHeaderArray.size() == 0 || mTruthArray.size() == 0 || mData.size() > sizeof(IndexSizeType)) {
+      // probably worth an exception
+      return;
+    }
+    const auto nIndexElements = mHeaderArray.size();
+    const auto indexSize = nIndexElements * sizeof(IndexElementType);
+    const auto nElements = mTruthArray.size();
+    const auto truthSize = nElements * sizeof(TruthElementType);
+    const auto offsetIndex = sizeof(IndexSizeType);
+    const auto offsetTruth = offsetIndex + indexSize;
+    mData.resize(offsetTruth + truthSize);
+    *reinterpret_cast<size_t*>(mData.data()) = nIndexElements;
+    memcpy(mData.data() + offsetIndex, mHeaderArray.data(), indexSize);
+    memcpy(mData.data() + offsetTruth, mTruthArray.data(), truthSize);
+    mHeaderArray.clear();
+    mTruthArray.clear();
   }
 
   ClassDefNV(MCTruthContainer, 2);

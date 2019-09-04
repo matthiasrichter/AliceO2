@@ -103,7 +103,7 @@ void HMPIDDigitizer::process(std::vector<o2::hmpid::HitType> const& hits, std::v
             }
           }
           if (newlabelneeded) {
-            mTmpLabelContainer.addElementRandomAccess(index, newlabel);
+            //mTmpLabelContainer.addElementRandomAccess(index, newlabel);
           }
         }
       } else {

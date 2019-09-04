@@ -67,7 +67,7 @@ void Digitizer::process(const std::vector<Hit>& hits, std::vector<Digit>& digits
 
           //add MCLabel to list (add energy if same primary or add another label)
           o2::phos::MCLabel label(hitNext.GetTrackID(), mCurrEvID, mCurrSrcID, true, hitNext.GetEnergyLoss());
-          labels.addElementRandomAccess(labelIndex, label);
+          //labels.addElementRandomAccess(labelIndex, label);
 
           hitIndex++;
           if (hitIndex < nHits) {

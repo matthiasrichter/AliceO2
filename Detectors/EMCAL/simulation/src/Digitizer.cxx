@@ -73,7 +73,7 @@ void Digitizer::process(const std::vector<Hit>& hits, std::vector<Digit>& digits
       }
 
       o2::MCCompLabel label(hit.GetTrackID(), mCurrEvID, mCurrSrcID, false);
-      mMCTruthContainer.addElementRandomAccess(LabelIndex, label);
+      //mMCTruthContainer.addElementRandomAccess(LabelIndex, label);
     } catch (InvalidPositionException& e) {
       LOG(ERROR) << "Error in creating the digit: " << e.what();
     }

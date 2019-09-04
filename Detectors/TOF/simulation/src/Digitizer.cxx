@@ -297,7 +297,7 @@ void Digitizer::fillDigitsInStrip(std::vector<Strip>* strips, o2::dataformats::M
       mcTruthContainer->addElement(lbl, label);
     } else {
       o2::tof::MCLabel label(trackID, eventID, sourceID, tdc);
-      mcTruthContainer->addElementRandomAccess(lbl, label);
+      //mcTruthContainer->addElementRandomAccess(lbl, label);
 
       // sort the labels according to increasing tdc value
       auto labels = mcTruthContainer->getLabels(lbl);

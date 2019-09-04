@@ -66,4 +66,31 @@
 #pragma link C++ class o2::dataformats::MCEventStats + ;
 #pragma link C++ class o2::dataformats::MCEventHeader + ;
 
+#pragma read                                                                    \
+    sourceClass="o2::dataformats::MCTruthContainer<o2::MCCompLabel>"            \
+    version="[2-]"                                                              \
+    targetClass="o2::dataformats::MCTruthContainer<o2::MCCompLabel>"            \
+
+#pragma read                                                                                                                     \
+    sourceClass="o2::dataformats::MCTruthContainer<o2::MCCompLabel>"                                                             \
+    source="std::vector<o2::dataformats::MCTruthHeaderElement> mHeaderArray; std::vector<o2::MCCompLabel> mTruthArray"           \
+    version="[1]"                                                                                                                \
+    targetClass="o2::dataformats::MCTruthContainer<o2::MCCompLabel>"                                                             \
+    target="mData"                                                                                                               \
+    embed="true"                                                                                                                 \
+    include="iostream,cstdlib"                                                                                                   \
+    code="{                                                                     \
+const auto nIndexElements = onfile.mHeaderArray.size();                         \
+const auto indexSize = nIndexElements * newObj->getIndexElementTypeSize();      \
+const auto nElements = onfile.mTruthArray.size();                               \
+const auto truthSize = nElements * newObj->getTruthElementTypeSize();           \
+const auto offsetIndex = newObj->getIndexSizeTypeSize();                        \
+const auto offsetTruth = offsetIndex + indexSize;                               \
+mData.resize(offsetTruth + truthSize);                                          \
+*reinterpret_cast<size_t*>(mData.data()) = nIndexElements;                      \
+memcpy(mData.data() + offsetIndex, onfile.mHeaderArray.data(), indexSize);      \
+memcpy(mData.data() + offsetTruth, onfile.mTruthArray.data(), truthSize);       \
+newObj->print(std::cout);                                                       \
+}"                                                                              \
+
 #endif

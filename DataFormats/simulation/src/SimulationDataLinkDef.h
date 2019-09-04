@@ -66,6 +66,7 @@
 #pragma link C++ class o2::dataformats::MCEventStats + ;
 #pragma link C++ class o2::dataformats::MCEventHeader + ;
 
+// https://root.cern.ch/doc/v606_ORIG/guide/InputOutput.html
 #pragma read                                                                    \
     sourceClass="o2::dataformats::MCTruthContainer<o2::MCCompLabel>"            \
     version="[2-]"                                                              \
@@ -78,11 +79,13 @@
     targetClass="o2::dataformats::MCTruthContainer<o2::MCCompLabel>"                                                             \
     target="mData"                                                                                                               \
     embed="true"                                                                                                                 \
-    include="iostream,cstdlib"                                                                                                   \
+    include="iostream,cstdlib,TVirtualStreamerInfo.h"                                                                            \
     code="{                                                                     \
-std::cout << &onfile << std::endl; \
-std::cout << offset_Onfile_o2cLcLdataformatscLcLMCTruthContainerlEo2cLcLMCCompLabelgR_mHeaderArray << std::endl; \
-std::cout << offset_Onfile_o2cLcLdataformatscLcLMCTruthContainerlEo2cLcLMCCompLabelgR_mTruthArray << std::endl; \
+TVirtualStreamerInfo *info = const_cast<TClass*>(oldObj->GetClass())->GetLastReadInfo();\
+auto offset_mHeaderArray = info->GetOffset(\"mHeaderArray\");\
+auto offset_mTruthArray = info->GetOffset(\"mTruthArray\");\
+std::cout << \"offset_mHeaderArray \" << offset_mHeaderArray << std::endl; \
+std::cout << \"offset_mTruthArray \" << offset_mTruthArray << std::endl; \
 const auto nIndexElements = onfile.mHeaderArray.size();                         \
 std::cout << nIndexElements << std::endl; \
 const auto indexSize = nIndexElements * newObj->getIndexElementTypeSize();      \

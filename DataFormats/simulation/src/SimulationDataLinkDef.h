@@ -72,37 +72,17 @@
     version="[2-]"                                                              \
     targetClass="o2::dataformats::MCTruthContainer<o2::MCCompLabel>"            \
 
-#pragma read                                                                                                                     \
-    sourceClass="o2::dataformats::MCTruthContainer<o2::MCCompLabel>"                                                             \
-    source="std::vector<o2::dataformats::MCTruthHeaderElement> mHeaderArray; std::vector<o2::MCCompLabel> mTruthArray"           \
-    version="[1]"                                                                                                                \
-    targetClass="o2::dataformats::MCTruthContainer<o2::MCCompLabel>"                                                             \
-    target="mData"                                                                                                               \
-    embed="true"                                                                                                                 \
-    include="iostream,cstdlib,TVirtualStreamerInfo.h"                                                                            \
+#pragma read                                                                    \
+    sourceClass="o2::dataformats::MCTruthContainer<o2::MCCompLabel>"            \
+    source="std::vector<o2::dataformats::MCTruthHeaderElement> mHeaderArray"    \
+    version="[1]"                                                               \
+    targetClass="o2::dataformats::MCTruthContainer<o2::MCCompLabel>"            \
+    target="mData"                                                              \
+    embed="true"                                                                \
+    include="iostream"                                                          \
     code="{                                                                     \
-TVirtualStreamerInfo *info = const_cast<TClass*>(oldObj->GetClass())->GetLastReadInfo();\
-auto offset_mHeaderArray = info->GetOffset(\"mHeaderArray\");\
-auto offset_mTruthArray = info->GetOffset(\"mTruthArray\");\
-std::cout << \"offset_mHeaderArray \" << offset_mHeaderArray << std::endl; \
-std::cout << \"offset_mTruthArray \" << offset_mTruthArray << std::endl; \
-const auto nIndexElements = onfile.mHeaderArray.size();                         \
-std::cout << nIndexElements << std::endl; \
-const auto indexSize = nIndexElements * newObj->getIndexElementTypeSize();      \
-std::cout << indexSize << std::endl; \
-const auto nElements = onfile.mTruthArray.size();                               \
-std::cout << nElements << std::endl; \
-const auto truthSize = nElements * newObj->getTruthElementTypeSize();           \
-std::cout << truthSize << std::endl; \
-const auto offsetIndex = newObj->getIndexSizeTypeSize();                        \
-std::cout << offsetIndex << std::endl; \
-const auto offsetTruth = offsetIndex + indexSize;                               \
-std::cout << offsetTruth << std::endl; \
-mData.resize(offsetTruth + truthSize);                                          \
-std::cout << mData.size() << std::endl; \
-*reinterpret_cast<size_t*>(mData.data()) = nIndexElements;                      \
-memcpy(mData.data() + offsetIndex, onfile.mHeaderArray.data(), indexSize);      \
-memcpy(mData.data() + offsetTruth, onfile.mTruthArray.data(), truthSize);       \
+newObj->convertLegacy();                                                        \
+std::cout << \"imported version 1 legacy data\" << std::endl;                   \
 newObj->print(std::cout);                                                       \
 }"                                                                              \
 

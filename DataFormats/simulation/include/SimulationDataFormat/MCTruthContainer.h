@@ -159,9 +159,9 @@ class MCTruthContainer
   // at the moment only strictly consecutive modes are supported
   void addElement(uint dataindex, TruthElement const& element)
   {
-    auto indexedSize = getIndexedSize();
-    auto nElements = getNElements();
-    auto offset = getTruthElementArrayOffset();
+    const auto indexedSize = getIndexedSize();
+    const auto nElements = getNElements();
+    const auto offset = getTruthElementArrayOffset();
     if (dataindex < indexedSize) {
       // look if we have something for this dataindex already
       // must currently be the last one
@@ -263,20 +263,37 @@ class MCTruthContainer
   //}
 
   // merge another container to the back of this one
-  //void mergeAtBack(MCTruthContainer<TruthElement> const& other)
-  //{
-  //  const auto oldtruthsize = mTruthArray.size();
-  //  const auto oldheadersize = mHeaderArray.size();
-  //
-  //  // copy from other
-  //  std::copy(other.mHeaderArray.begin(), other.mHeaderArray.end(), std::back_inserter(mHeaderArray));
-  //  std::copy(other.mTruthArray.begin(), other.mTruthArray.end(), std::back_inserter(mTruthArray));
-  //
-  //  // adjust information of newly attached part
-  //  for (uint i = oldheadersize; i < mHeaderArray.size(); ++i) {
-  //    mHeaderArray[i].index += oldtruthsize;
-  //  }
-  //}
+  void mergeAtBack(self_type const& other)
+  {
+    const auto indexedSize = getIndexedSize();
+    const auto nElements = getNElements();
+    auto offset = getTruthElementArrayOffset();
+    const auto growindex = other.getIndexedSize();
+    const auto growtruth = other.getNElements();
+
+    // resize and move existing truth elements to make room in the index
+    mData.resize(mData.size() + growindex * sizeof(IndexElementType) + growtruth * sizeof(TruthElementType));
+    auto truthElementsStart = mData.data() + offset;
+    memmove(truthElementsStart + growindex * sizeof(IndexElementType), truthElementsStart, nElements * sizeof(TruthElementType));
+    offset += growindex * sizeof(IndexElementType);
+    
+    // copy and adjust information of newly attached part
+    IndexElementType* indexTgt = reinterpret_cast<IndexElementType*>(mData.data() + sizeof(IndexSizeType)) + indexedSize;
+    IndexElementType* indexSrc = reinterpret_cast<IndexElementType*>(mData.data() + sizeof(IndexSizeType));
+    IndexElementType* srcEnd = indexSrc + growindex;
+    for (; indexSrc != srcEnd; indexSrc++, indexTgt++) {
+      indexTgt->index = indexSrc->index + nElements;
+    }
+
+    // copy elements
+    auto elementTgt = mData.data() + offset + nElements * sizeof(TruthElementType);
+    memcpy(elementTgt, other.mData.data() + other.getTruthElementArrayOffset(), growindex * sizeof(TruthElementType));
+
+    // adjust size
+    *reinterpret_cast<IndexSizeType*>(mData.data()) += growindex;
+    assert(getIndexedSize() == indexedSize + growindex);
+    assert(getNElements() == nElements + growtruth);
+  }
 
   ClassDefNV(MCTruthContainer, 2);
 }; // end class

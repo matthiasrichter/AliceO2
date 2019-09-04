@@ -95,13 +95,13 @@ BOOST_AUTO_TEST_CASE(MCTruth)
     container2.addElement(1, TruthElement(1));
     container2.addElement(2, TruthElement(10));
 
-    //container1.mergeAtBack(container2);
-    //auto lview = container1.getLabels(3); //
-    //BOOST_CHECK(lview.size() == 2);
-    //BOOST_CHECK(lview[0] == 11);
-    //BOOST_CHECK(lview[1] == 12);
-    //BOOST_CHECK(container1.getIndexedSize() == 6);
-    //BOOST_CHECK(container1.getNElements() == 8);
+    container1.mergeAtBack(container2);
+    auto lview = container1.getLabels(3); //
+    BOOST_CHECK(lview.size() == 2);
+    BOOST_CHECK(lview[0] == 11);
+    BOOST_CHECK(lview[1] == 12);
+    BOOST_CHECK(container1.getIndexedSize() == 6);
+    BOOST_CHECK(container1.getNElements() == 8);
   }
 }
 

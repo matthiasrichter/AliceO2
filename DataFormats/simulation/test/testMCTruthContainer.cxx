@@ -267,23 +267,37 @@ BOOST_AUTO_TEST_CASE(MCTruthContainer_move)
   BOOST_CHECK(container.getNElements() == 4);
 }
 
-BOOST_AUTO_TEST_CASE(MCTruthContainer_schema_writer)
+//BOOST_AUTO_TEST_CASE(MCTruthContainer_schema_writer)
+//{
+//  using TruthElement = o2::MCCompLabel;
+//  dataformats::MCTruthContainer<TruthElement> container;
+//  container.addElement(0, TruthElement(1, 0, 0, false));
+//  container.addElement(0, TruthElement(2, 0, 0, false));
+//  container.addElement(1, TruthElement(1, 0, 0, false));
+//  container.addElement(2, TruthElement(10, 0, 0, false));
+//
+//  std::unique_ptr<TFile> testFile(TFile::Open("MCTruthContainer-test.root", "RECREATE"));
+//  std::unique_ptr<TTree> testTree = std::make_unique<TTree>("testtree", "testtree");
+//
+//  auto* branch = testTree->Branch("labels", &container);
+//  testTree->Fill();
+//  testTree->Write();
+//  testTree->SetDirectory(nullptr);
+//  testFile->Close();
+//}
+
+BOOST_AUTO_TEST_CASE(MCTruthContainer_schema_reader)
 {
-  using TruthElement = o2::MCCompLabel;
-  dataformats::MCTruthContainer<TruthElement> container;
-  container.addElement(0, TruthElement(1, 0, 0, false));
-  container.addElement(0, TruthElement(2, 0, 0, false));
-  container.addElement(1, TruthElement(1, 0, 0, false));
-  container.addElement(2, TruthElement(10, 0, 0, false));
+  std::unique_ptr<TFile> testfile(TFile::Open("MCTruthContainer-test.root"));
+  if (!testfile || testfile->IsZombie()) {
+    return;
+  }
+  TTree* testtree = reinterpret_cast<TTree*>(testfile->GetObjectChecked("testtree", "TTree"));
+  BOOST_REQUIRE(testtree != nullptr);
 
-  std::unique_ptr<TFile> testFile(TFile::Open("MCTruthContainer-test.root", "RECREATE"));
-  std::unique_ptr<TTree> testTree = std::make_unique<TTree>("testtree", "testtree");
-
-  auto* branch = testTree->Branch("labels", &container);
-  testTree->Fill();
-  testTree->Write();
-  testTree->SetDirectory(nullptr);
-  testFile->Close();
+  o2::dataformats::MCTruthContainer<o2::MCCompLabel>* labels=nullptr;
+  testtree->SetBranchAddress("labels", &labels);
+  testtree->GetEntry(0);
 }
 
 } // namespace o2

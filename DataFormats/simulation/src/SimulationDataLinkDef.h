@@ -80,13 +80,23 @@
     embed="true"                                                                                                                 \
     include="iostream,cstdlib"                                                                                                   \
     code="{                                                                     \
+std::cout << &onfile << std::endl; \
+std::cout << offset_Onfile_o2cLcLdataformatscLcLMCTruthContainerlEo2cLcLMCCompLabelgR_mHeaderArray << std::endl; \
+std::cout << offset_Onfile_o2cLcLdataformatscLcLMCTruthContainerlEo2cLcLMCCompLabelgR_mTruthArray << std::endl; \
 const auto nIndexElements = onfile.mHeaderArray.size();                         \
+std::cout << nIndexElements << std::endl; \
 const auto indexSize = nIndexElements * newObj->getIndexElementTypeSize();      \
+std::cout << indexSize << std::endl; \
 const auto nElements = onfile.mTruthArray.size();                               \
+std::cout << nElements << std::endl; \
 const auto truthSize = nElements * newObj->getTruthElementTypeSize();           \
+std::cout << truthSize << std::endl; \
 const auto offsetIndex = newObj->getIndexSizeTypeSize();                        \
+std::cout << offsetIndex << std::endl; \
 const auto offsetTruth = offsetIndex + indexSize;                               \
+std::cout << offsetTruth << std::endl; \
 mData.resize(offsetTruth + truthSize);                                          \
+std::cout << mData.size() << std::endl; \
 *reinterpret_cast<size_t*>(mData.data()) = nIndexElements;                      \
 memcpy(mData.data() + offsetIndex, onfile.mHeaderArray.data(), indexSize);      \
 memcpy(mData.data() + offsetTruth, onfile.mTruthArray.data(), truthSize);       \

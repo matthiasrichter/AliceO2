@@ -98,6 +98,9 @@ class MCTruthContainer
   // move assignment operator
   MCTruthContainer& operator=(MCTruthContainer&& other) = default;
 
+  static constexpr size_t getIndexSizeTypeSize() {return sizeof(IndexSizeType);}
+  static constexpr size_t getIndexElementTypeSize() {return sizeof(IndexElementType);}
+  static constexpr size_t getTruthElementTypeSize() {return sizeof(TruthElementType);}
   // access
   MCTruthHeaderElement const& getMCTruthHeader(uint dataindex) const
   {
@@ -293,6 +296,12 @@ class MCTruthContainer
     *reinterpret_cast<IndexSizeType*>(mData.data()) += growindex;
     assert(getIndexedSize() == indexedSize + growindex);
     assert(getNElements() == nElements + growtruth);
+  }
+
+  template <typename Stream>
+  void print(Stream& stream)
+  {
+    stream << "MCTruthContainer index = " << getIndexedSize() << " for " << getNElements() << " elements(s), total size " << mData.size() << std::endl;
   }
 
   ClassDefNV(MCTruthContainer, 2);

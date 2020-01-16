@@ -378,6 +378,8 @@ framework::WorkflowSpec getWorkflow(std::vector<int> const& tpcSectors, std::vec
                                                          "ClusRefs", "trackclusref-branch-name"};      //
     auto mcdef = BranchDefinition<MCLabelContainer>{InputSpec{"mcinput", "TPC", "TRACKMCLBL"},         //
                                                     "TPCTracksMCTruth", "trackmc-branch-name"};        //
+    auto ccldef = BranchDefinition<CompressedClusters>{InputSpec{"inputCompCl", "TPC", "COMPCLUSTERS"}, //
+                                                       "TPCCompClusters", "compcluster-branch-name"};   //
 
     // depending on the MC propagation flag, the RootTreeWriter spec is created with 3 or 2
     // branch definition
@@ -385,12 +387,14 @@ framework::WorkflowSpec getWorkflow(std::vector<int> const& tpcSectors, std::vec
       specs.push_back(MakeRootTreeWriterSpec(processName, defaultFileName, defaultTreeName,            //
                                              MakeRootTreeWriterSpec::TerminationPolicy::Process,       //
                                              MakeRootTreeWriterSpec::TerminationCondition{checkReady}, //
+                                             std::move(ccldef),                                        //
                                              std::move(tracksdef), std::move(clrefdef),                //
                                              std::move(mcdef))());                                     //
     } else {                                                                                           //
       specs.push_back(MakeRootTreeWriterSpec(processName, defaultFileName, defaultTreeName,            //
                                              MakeRootTreeWriterSpec::TerminationPolicy::Process,       //
                                              MakeRootTreeWriterSpec::TerminationCondition{checkReady}, //
+                                             std::move(ccldef),                                        //
                                              std::move(tracksdef), std::move(clrefdef))());            //
     }
   }

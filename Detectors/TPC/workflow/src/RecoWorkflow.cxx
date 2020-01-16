@@ -21,12 +21,14 @@
 #include "TPCWorkflow/ClustererSpec.h"
 #include "TPCWorkflow/ClusterDecoderRawSpec.h"
 #include "TPCWorkflow/CATrackerSpec.h"
+#include "TPCWorkflow/CompressorSpec.h"
 #include "Algorithm/RangeTokenizer.h"
 #include "TPCBase/Digit.h"
 #include "DataFormatsTPC/Constants.h"
 #include "DataFormatsTPC/ClusterGroupAttribute.h"
 #include "DataFormatsTPC/TrackTPC.h"
 #include "DataFormatsTPC/TPCSectorHeader.h"
+#include "DataFormatsTPC/CompressedClusters.h"
 #include "SimulationDataFormat/MCTruthContainer.h"
 #include "SimulationDataFormat/MCCompLabel.h"
 
@@ -348,6 +350,7 @@ framework::WorkflowSpec getWorkflow(std::vector<int> const& tpcSectors, std::vec
   // selected by output type 'tracks'
   if (runTracker) {
     specs.emplace_back(o2::tpc::getCATrackerSpec(propagateMC, caClusterer, zsDecoder, laneConfiguration));
+    specs.emplace_back(o2::tpc::getCompressorSpec());
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////

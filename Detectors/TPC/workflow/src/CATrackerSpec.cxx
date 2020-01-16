@@ -21,10 +21,12 @@
 #include "Framework/ControlService.h"
 #include "Framework/ConfigParamRegistry.h"
 #include "Framework/InputRecordWalker.h"
+#include "Framework/SerializationMethods.h"
 #include "DataFormatsTPC/TPCSectorHeader.h"
 #include "DataFormatsTPC/ClusterGroupAttribute.h"
 #include "DataFormatsTPC/ClusterNative.h"
 #include "DataFormatsTPC/ClusterNativeHelper.h"
+#include "DataFormatsTPC/CompressedClusters.h"
 #include "DataFormatsTPC/Helpers.h"
 #include "DataFormatsTPC/ZeroSuppression.h"
 #include "TPCReconstruction/GPUCATracking.h"
@@ -592,6 +594,11 @@ DataProcessorSpec getCATrackerSpec(bool processMC, bool caClusterer, bool zsDeco
       //o2::tpc::ClusterNativeAccess clustersNativeDecoded; // Cluster native access structure as used by the tracker
       //std::vector<o2::tpc::ClusterNative> clusterBuffer; // std::vector that will hold the actual clusters, clustersNativeDecoded will point inside here
       //mDecoder.decompress(clustersCompressed, clustersNativeDecoded, clusterBuffer, param); // Run decompressor
+      if (compressedClusters != nullptr) {
+	pc.outputs().snapshot(OutputRef{"compclusterout"}, ROOTSerialized<o2::tpc::CompressedClusters const>(*compressedClusters));
+      } else {
+        LOG(ERROR) << "unable to get compressed cluster info from track";
+      }
 
       processAttributes->bufferCache.clear();
       processAttributes->tpcZSmessagesReceived = 0;
@@ -662,6 +669,7 @@ DataProcessorSpec getCATrackerSpec(bool processMC, bool caClusterer, bool zsDeco
       constexpr o2::header::DataDescription datadesc("TRACKMCLBL");
       outputSpecs.emplace_back(label, gDataOriginTPC, datadesc, 0, Lifetime::Timeframe);
     }
+    outputSpecs.emplace_back(OutputLabel{"compclusterout"}, gDataOriginTPC, "COMPCLUSTERS", Lifetime::Timeframe);
     return std::move(outputSpecs);
   };
 
